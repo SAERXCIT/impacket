@@ -11,6 +11,7 @@ Merged PRs
 * [#1288](https://github.com/SecureAuthCorp/impacket/pull/1288): [ntlmrelayx] LDAP attack: bypass computer creation restrictions with CVE-2021-34470
 * [#1289](https://github.com/SecureAuthCorp/impacket/pull/1289): [ntlmrelayx] LDAP attack: Add DNS records through LDAP
 * [#1291](https://github.com/SecureAuthCorp/impacket/pull/1291): [dacledit] New example script for DACL manipulation
+* [#1318](https://github.com/SecureAuthCorp/impacket/pull/1318): [ntlmrelayx] Dump ADCS: bug fixes
 
 Impacket
 ========
