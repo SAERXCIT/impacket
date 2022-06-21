@@ -43,7 +43,7 @@ from impacket.dcerpc.v5.dtypes import NULL
 from impacket.krb5.keytab import Keytab
 from six import PY2
 
-OUTPUT_FILENAME = '__' + str(time.time())
+OUTPUT_FILENAME = str(time.time())
 CODEC = sys.stdout.encoding
 
 
@@ -292,7 +292,7 @@ class RemoteShell(cmd.Cmd):
         command = self.__shell + data
 
         if self.__noOutput is False:
-            command += ' 1> ' + '\\\\127.0.0.1\\%s' % self.__share + self.__output + ' 2>&1'
+            command += ' > C:\\Windows\\%s 2>&1' % self.__output
         if PY2:
             self.__win32Process.Create(command.decode(sys.stdin.encoding), self.__pwd, None)
         else:
