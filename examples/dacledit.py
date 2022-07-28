@@ -21,7 +21,7 @@ import binascii
 import codecs
 import json
 import logging
-import re
+import os
 import sys
 import traceback
 import datetime
@@ -360,6 +360,10 @@ class DACLedit(object):
         backup["dn"] = self.target_principal.entry_dn
         if not self.filename:
             self.filename = 'dacledit-%s.bak' % datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+        else:
+            if os.path.exists(self.filename):
+                logging.info("File %s already exists, I'm refusing to overwrite it, setting another filename" % self.filename)
+                self.filename = 'dacledit-%s.bak' % datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
         with codecs.open(self.filename, 'w', 'utf-8') as outfile:
             json.dump(backup, outfile)
         logging.info('DACL backed up to %s', self.filename)
@@ -385,9 +389,8 @@ class DACLedit(object):
 
         # Do a backup of the actual DACL and push the restoration
         self.backup()
+        logging.info('Restoring DACL')
         self.modify_secDesc_for_dn(self.target_DN, new_security_descriptor)
-        logging.info('The DACL has been well restored.')
-
     
     # Attempts to retrieve the DACL in the Security Descriptor of the specified target
     def search_target_principal_security_descriptor(self):
