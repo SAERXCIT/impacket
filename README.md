@@ -13,6 +13,7 @@ Merged PRs
 * [#1291](https://github.com/SecureAuthCorp/impacket/pull/1291): [dacledit] New example script for DACL manipulation
 * [#1318](https://github.com/SecureAuthCorp/impacket/pull/1318): [ntlmrelayx] Dump ADCS: bug fixes
 * [#1323](https://github.com/SecureAuthCorp/impacket/pull/1323): [owneredit.py] New example script to change an object's owner
+* [#1329](https://github.com/SecureAuthCorp/impacket/pull/1329): Use a custom LDAP filter during a DCSync in secretsdump.py
 * [#1367](https://github.com/SecureAuthCorp/impacket/pull/1367): Add UTC date to cached domain logon information
 
 Impacket
