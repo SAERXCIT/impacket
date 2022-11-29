@@ -478,7 +478,7 @@ class TICKETER:
         encTicketPart['authtime'] = KerberosTime.to_asn1(datetime.datetime.utcnow())
         encTicketPart['starttime'] = KerberosTime.to_asn1(datetime.datetime.utcnow())
         # Let's extend the ticket's validity a lil bit
-        ticketDuration = datetime.datetime.utcnow() + datetime.timedelta(days=int(self.__options.duration))
+        ticketDuration = datetime.datetime.utcnow() + datetime.timedelta(hours=int(self.__options.duration))
         encTicketPart['endtime'] = KerberosTime.to_asn1(ticketDuration)
         encTicketPart['renew-till'] = KerberosTime.to_asn1(ticketDuration)
         encTicketPart['authorization-data'] = noValue
@@ -883,8 +883,8 @@ if __name__ == '__main__':
                                                                           'created for (default = 500)')
     parser.add_argument('-extra-sid', action="store", help='Comma separated list of ExtraSids to be included inside the ticket\'s PAC')
     parser.add_argument('-extra-pac', action='store_true', help='Populate your ticket with extra PAC (UPN_DNS, ATTRIBUTES and REQUESTOR)')
-    parser.add_argument('-duration', action="store", default = '3650', help='Amount of days till the ticket expires '
-                                                                            '(default = 365*10)')
+    parser.add_argument('-duration', action="store", default = '87600', help='Amount of hours till the ticket expires '
+                                                                            '(default = 24*365*10)')
     parser.add_argument('-ts', action='store_true', help='Adds timestamp to every logging output')
     parser.add_argument('-debug', action='store_true', help='Turn DEBUG output ON')
 
