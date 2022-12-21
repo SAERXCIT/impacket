@@ -19,6 +19,9 @@ Merged PRs
 * [#1393](https://github.com/SecureAuthCorp/impacket/pull/1393): [rbcd.py] Handled SID not found in LDAP error
 * [#1395](https://github.com/SecureAuthCorp/impacket/pull/1395): Correctly include authtime and etype in ticket conveter
 * [#1428](https://github.com/SecureAuthCorp/impacket/pull/1428): [ntlmrelayx/adcs] Encode and handle non-alphanumeric chars in CertificateName
+* [#1431](https://github.com/SecureAuthCorp/impacket/pull/1431): Update ccache.py to enhance the ability of dealing with cross realm ticket
+* [#1442](https://github.com/SecureAuthCorp/impacket/pull/1442): Adds relay to ICPR over RPC
+* [#1449](https://github.com/SecureAuthCorp/impacket/pull/1449): Allow weak TLS ciphers for LDAP connections
 
 Impacket
 ========
