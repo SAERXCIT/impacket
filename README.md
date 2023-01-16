@@ -23,6 +23,7 @@ Merged PRs
 * [#1431](https://github.com/SecureAuthCorp/impacket/pull/1431): Update ccache.py to enhance the ability of dealing with cross realm ticket
 * [#1442](https://github.com/SecureAuthCorp/impacket/pull/1442): Adds relay to ICPR over RPC
 * [#1449](https://github.com/SecureAuthCorp/impacket/pull/1449): Allow weak TLS ciphers for LDAP connections
+* [#1458](https://github.com/SecureAuthCorp/impacket/pull/1458): SID Bruteforce through ntlmrelay over SMB
 
 Impacket
 ========

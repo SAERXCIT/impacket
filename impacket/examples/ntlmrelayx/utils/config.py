@@ -62,6 +62,7 @@ class NTLMRelayxConfig:
         self.exeFile = None
         self.interactive = False
         self.enumLocalAdmins = False
+        self.enumDomain = False
         self.SMBServerChallenge = None
         self.rpc_attack = None
 
@@ -150,6 +151,9 @@ class NTLMRelayxConfig:
 
     def setEnumLocalAdmins(self, enumLocalAdmins):
         self.enumLocalAdmins = enumLocalAdmins
+
+    def setEnumDomain(self, enumDomain):
+        self.enumDomain = enumDomain
 
     def setDisableMulti(self, disableMulti):
         self.disableMulti = disableMulti
