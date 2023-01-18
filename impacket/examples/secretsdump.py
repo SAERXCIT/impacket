@@ -661,6 +661,46 @@ class RemoteOperations:
 
         return domainUsers
 
+    def getDomainTrustsLDAP(self):
+        def guidBytesToString(guidBytes):
+            return '{%s-%s-%s-%s-%s}' % (
+                hexlify(guidBytes[3::-1]).decode("utf8"),
+                hexlify(guidBytes[5:3:-1]).decode("utf8"),
+                hexlify(guidBytes[7:5:-1]).decode("utf8"),
+                hexlify(guidBytes[8:10]).decode("utf8"),
+                hexlify(guidBytes[10:]).decode("utf8"))
+
+        domainTrusts = []
+        if self.__ldapConnection is None:
+            LOG.error('Failed to establish LDAP connection, the trust list will be empty')
+            return domainTrusts
+
+        try:
+            searchFilter = "(objectClass=trustedDomain)"
+            LOG.debug('Search Filter=%s' % searchFilter)
+            sc = SimplePagedResultsControl(size=100)
+            resp = self.__ldapConnection.search(searchFilter=searchFilter, attributes=['objectGUID'], sizeLimit=0, searchControls=[sc])
+        except LDAPSearchError:
+            raise
+
+        self.__ldapConnection.close()
+
+        for item in resp:
+            if isinstance(item, SearchResultEntry):
+                objectGUID = ''
+                try:
+                    for attribute in item['attributes']:
+                        if str(attribute['type']) == 'objectGUID':
+                            objectGUID = guidBytesToString(attribute['vals'][0].asOctets())
+                except Exception as e:
+                    LOG.debug("Exception", exc_info=True)
+                    LOG.error('Skipping item, cannot process due to error %s' % str(e))
+                    pass
+                else:
+                    domainTrusts.append(objectGUID)
+
+        return domainTrusts
+
     def getDomainSid(self):
         if self.__domainSid is not None:
             return self.__domainSid
@@ -706,7 +746,16 @@ class RemoteOperations:
         if self.__smbConnection.getServerDNSDomainName() == '':
             # Todo: figure out an RPC call that gives us the domain FQDN
             # instead of the NETBIOS name as NetrWkstaGetInfo does
-            return b''
+            if not self.__smbConnection._doKerberos:
+                return ''
+
+            # If Kerberos is used, self.__smbConnection._SMBConnection._Session['ServerDNSDomainName'] will be empty
+            # Try to obtain domain FQDN from remote name, which will be the target's FQDN since Kerberos is used
+            remote_name = self.__smbConnection.getRemoteName()
+
+            # If remote_name is empty or does not contain dots, this will still return an empty string
+            # If remote_name is an actual fqdn, this will return the target's domain
+            return '.'.join(remote_name.split('.')[1:])
         else:
             return self.__smbConnection.getServerDNSDomainName()
 
@@ -1867,6 +1916,10 @@ class NTDSHashes:
         'pekList':b'ATTk590689',
         'supplementalCredentials':b'ATTk589949',
         'pwdLastSet':b'ATTq589920',
+        'trustPartner':b'ATTm589957',
+        'trustAuthIncoming':b'ATTk589953',
+        'trustAuthOutgoing':b'ATTk589959',
+        'dNSHostName':b'ATTm590443',
     }
 
     NAME_TO_ATTRTYP = {
@@ -1879,6 +1932,10 @@ class NTDSHashes:
         'supplementalCredentials': 0x9007D,
         'objectSid': 0x90092,
         'userAccountControl':0x90008,
+        'trustPartner':0x90085,
+        'trustAuthIncoming':0x90081,
+        'trustAuthOutgoing':0x90087,
+        'dNSHostName':0x9026B,
     }
 
     ATTRTYP_TO_ATTID = {
@@ -1892,6 +1949,10 @@ class NTDSHashes:
         'objectSid': '1.2.840.113556.1.4.146',
         'pwdLastSet': '1.2.840.113556.1.4.96',
         'userAccountControl':'1.2.840.113556.1.4.8',
+        'trustPartner':'1.2.840.113556.1.4.133',
+        'trustAuthIncoming':'1.2.840.113556.1.4.129',
+        'trustAuthOutgoing':'1.2.840.113556.1.4.135',
+        'dNSHostName':'1.2.840.113556.1.4.619',
     }
 
     KERBEROS_TYPE = {
@@ -1961,7 +2022,7 @@ class NTDSHashes:
 
     def __init__(self, ntdsFile, bootKey, isRemote=False, history=False, noLMHash=True, remoteOps=None,
                  useVSSMethod=False, justNTLM=False, pwdLastSet=False, resumeSession=None, outputFileName=None,
-                 justUser=None, ldapFilter=None, printUserStatus=False,
+                 justUser=None, ldapFilter=None, printUserStatus=False, dumpTrustKeys=False,
                  perSecretCallback = lambda secretType, secret : _print_helper(secret),
                  resumeSessionMgr=ResumeSessionMgrInFile):
         self.__bootKey = bootKey
@@ -1975,6 +2036,7 @@ class NTDSHashes:
         if self.__NTDS is not None:
             self.__ESEDB = ESENT_DB(ntdsFile, isRemote = isRemote)
             self.__cursor = self.__ESEDB.openTable('datatable')
+        self.__currentDomain = ''
         self.__tmpUsers = list()
         self.__PEK = list()
         self.__cryptoCommon = CryptoCommon()
@@ -1984,6 +2046,7 @@ class NTDSHashes:
         self.__resumeSession = resumeSessionMgr(resumeSession)
         self.__outputFileName = outputFileName
         self.__justUser = justUser
+        self.__dumpTrustKeys = dumpTrustKeys
         self.__ldapFilter = ldapFilter
         self.__perSecretCallback = perSecretCallback
 
@@ -2003,6 +2066,10 @@ class NTDSHashes:
             self.NAME_TO_INTERNAL['userAccountControl'] : 1,
             self.NAME_TO_INTERNAL['supplementalCredentials'] : 1,
             self.NAME_TO_INTERNAL['pekList'] : 1,
+            self.NAME_TO_INTERNAL['trustPartner'] : 1,
+            self.NAME_TO_INTERNAL['trustAuthIncoming'] : 1,
+            self.NAME_TO_INTERNAL['trustAuthOutgoing'] : 1,
+            self.NAME_TO_INTERNAL['dNSHostName'] : 1,
 
         }
 
@@ -2024,7 +2091,8 @@ class NTDSHashes:
             elif record[self.NAME_TO_INTERNAL['pekList']] is not None:
                 peklist =  unhexlify(record[self.NAME_TO_INTERNAL['pekList']])
                 break
-            elif record[self.NAME_TO_INTERNAL['sAMAccountType']] in self.ACCOUNT_TYPES:
+            elif record[self.NAME_TO_INTERNAL['sAMAccountType']] in self.ACCOUNT_TYPES or \
+            record[self.NAME_TO_INTERNAL['trustPartner']] is not None:
                 # Okey.. we found some users, but we're not yet ready to process them.
                 # Let's just store them in a temp list
                 self.__tmpUsers.append(record)
@@ -2223,116 +2291,265 @@ class NTDSHashes:
 
         LOG.debug('Leaving NTDSHashes.__decryptSupplementalInfo')
 
+    def __getTrustKerberosSalt(self, currentDomain, trustedDomain, isIn):
+        if isIn:
+            fromDomain = currentDomain
+            destDomain = trustedDomain
+        else:
+            fromDomain = trustedDomain
+            destDomain = currentDomain
+        salt = b'%skrbtgt%s' % (fromDomain.upper().encode('utf-8'), destDomain.upper().encode('utf-8'))
+        return salt
+
+    def __printTrustKerberos(self, rawsecret, trustedDomain, isIn, isHistory=False):
+        # Attempt to create Kerberos keys from trust keys (if possible)
+        # If remote, obtain domain through RemoteOps
+        if self.__remoteOps is not None and hasattr(self.__remoteOps, 'getDNSDomain'):
+            self.__currentDomain = self.__remoteOps.getDNSDomain()
+
+        # If not remote (parsing local NTDS), hopefully self.__currentDomain will have been
+        # filled previously by parsing a computer's dNSHostName attribute.
+        # Potential bug: if a trust entry is read before any computer, self.__currentDomain will
+        # be empty and Kerberos keys won't be calculated. Can it ever happen?
+        currentDomain = self.__currentDomain
+        if not currentDomain:
+            return False
+
+        salt = self.__getTrustKerberosSalt(currentDomain, trustedDomain, isIn)
+        allciphers = [
+            int(constants.EncryptionTypes.aes256_cts_hmac_sha1_96.value),
+            int(constants.EncryptionTypes.aes128_cts_hmac_sha1_96.value),
+            int(constants.EncryptionTypes.des_cbc_md5.value)
+        ]
+        # Dirk-jan's note in function __printMachineKerberos is also valid here. Thanks !
+        rawsecret = rawsecret.decode('utf-16-le', 'replace').encode('utf-8', 'replace')
+        for etype in allciphers:
+            try:
+                key = string_to_key(etype, rawsecret, salt, None)
+            except Exception:
+                LOG.debug('Exception', exc_info=True)
+                raise
+            typename = NTDSHashes.KERBEROS_TYPE[etype]
+            secret = "%s-%s%s:%s:%s" % (trustedDomain,
+                                        ("Incoming" if isIn else "Outgoing"),
+                                        ("_history" if isHistory else ""),
+                                        typename, hexlify(key.contents).decode('utf-8'))
+            self.__perSecretCallback(NTDSHashes.SECRET_TYPE.NTDS_KERBEROS, secret)
+        return True
+
+    def __processTrustKey(self, trustPartner, secret, isIn, isHistory):
+        md4 = MD4.new()
+        md4.update(secret)
+        answer = "%s-%s%s:%s:%s:::" % (trustPartner,
+                                       ("Incoming" if isIn else "Outgoing"),
+                                       ("_history" if isHistory else ""),
+                                       hexlify(ntlm.LMOWFv1('','')).decode('utf-8'),
+                                       hexlify(md4.digest()).decode('utf-8'))
+        self.__perSecretCallback(NTDSHashes.SECRET_TYPE.NTDS, answer)
+        if self.__justNTLM is False:
+            # Attempt to calculate and print Kerberos keys
+            if not self.__printTrustKerberos(secret, trustPartner, isIn, isHistory):
+                LOG.debug('Could not calculate trust Kerberos keys, only printing plain password (hex encoded)')
+            # Always print plaintext anyway since this may be needed for some popular usecases
+            extrasecret = "%s-%s%s:plain_password_hex:%s" % (trustPartner,
+                                                             ("Incoming" if isIn else "Outgoing"),
+                                                             ("_history" if isHistory else ""),
+                                                             hexlify(secret).decode('utf-8'))
+            self.__perSecretCallback(NTDSHashes.SECRET_TYPE.NTDS_CLEARTEXT, extrasecret)
+
+    def __parseTrustKeyStruct(self, trustKeyStruct):
+        # All offsets taken from these structs
+        # https://github.com/gentilkiwi/mimikatz/blob/e10bde5b16b747dc09ca5146f93f2beaf74dd17a/mimikatz/modules/kuhl_m_lsadump.h#L42-L54
+        currentKeyOffset = unpack('<I', trustKeyStruct[4:4+4])[0]
+        previousKeyOffset = unpack('<I', trustKeyStruct[8:8+4])[0]
+        currentKeyLength = unpack('<I', trustKeyStruct[(currentKeyOffset+12):(currentKeyOffset+12)+4])[0]
+        previousKeyLength = unpack('<I', trustKeyStruct[(previousKeyOffset+12):(previousKeyOffset+12)+4])[0]
+        currentKey = trustKeyStruct[(currentKeyOffset+16):(currentKeyOffset+16)+currentKeyLength]
+        previousKey = trustKeyStruct[(previousKeyOffset+16):(previousKeyOffset+16)+previousKeyLength]
+        return currentKey, previousKey
+
     def __decryptHash(self, record, prefixTable=None, outputFile=None):
         LOG.debug('Entering NTDSHashes.__decryptHash')
         if self.__useVSSMethod is True:
-            LOG.debug('Decrypting hash for user: %s' % record[self.NAME_TO_INTERNAL['name']])
+            LOG.debug('Decrypting hash for record: %s' % record[self.NAME_TO_INTERNAL['name']])
 
-            sid = SAMR_RPC_SID(unhexlify(record[self.NAME_TO_INTERNAL['objectSid']]))
-            rid = sid.formatCanonical().split('-')[-1]
+            if self.__dumpTrustKeys is False:
+                try:
+                    sid = SAMR_RPC_SID(unhexlify(record[self.NAME_TO_INTERNAL['objectSid']]))
+                except TypeError:
+                    # We're dumping a trust key (record doesn't have a self.NAME_TO_INTERNAL['objectSid'] column)
+                    # We don't care, return
+                    return
+                rid = sid.formatCanonical().split('-')[-1]
 
-            if record[self.NAME_TO_INTERNAL['dBCSPwd']] is not None:
-                encryptedLMHash = self.CRYPTED_HASH(unhexlify(record[self.NAME_TO_INTERNAL['dBCSPwd']]))
-                if encryptedLMHash['Header'][:4] == b'\x13\x00\x00\x00':
-                    # Win2016 TP4 decryption is different
-                    encryptedLMHash = self.CRYPTED_HASHW16(unhexlify(record[self.NAME_TO_INTERNAL['dBCSPwd']]))
-                    pekIndex = hexlify(encryptedLMHash['Header'])
-                    tmpLMHash = self.__cryptoCommon.decryptAES(self.__PEK[int(pekIndex[8:10])],
-                                                               encryptedLMHash['EncryptedHash'][:16],
-                                                               encryptedLMHash['KeyMaterial'])
-                else:
-                    tmpLMHash = self.__removeRC4Layer(encryptedLMHash)
-                LMHash = self.__removeDESLayer(tmpLMHash, rid)
-            else:
-                LMHash = ntlm.LMOWFv1('', '')
-
-            if record[self.NAME_TO_INTERNAL['unicodePwd']] is not None:
-                encryptedNTHash = self.CRYPTED_HASH(unhexlify(record[self.NAME_TO_INTERNAL['unicodePwd']]))
-                if encryptedNTHash['Header'][:4] == b'\x13\x00\x00\x00':
-                    # Win2016 TP4 decryption is different
-                    encryptedNTHash = self.CRYPTED_HASHW16(unhexlify(record[self.NAME_TO_INTERNAL['unicodePwd']]))
-                    pekIndex = hexlify(encryptedNTHash['Header'])
-                    tmpNTHash = self.__cryptoCommon.decryptAES(self.__PEK[int(pekIndex[8:10])],
-                                                               encryptedNTHash['EncryptedHash'][:16],
-                                                               encryptedNTHash['KeyMaterial'])
-                else:
-                    tmpNTHash = self.__removeRC4Layer(encryptedNTHash)
-                NTHash = self.__removeDESLayer(tmpNTHash, rid)
-            else:
-                NTHash = ntlm.NTOWFv1('', '')
-
-            if record[self.NAME_TO_INTERNAL['userPrincipalName']] is not None:
-                domain = record[self.NAME_TO_INTERNAL['userPrincipalName']].split('@')[-1]
-                userName = '%s\\%s' % (domain, record[self.NAME_TO_INTERNAL['sAMAccountName']])
-            else:
-                userName = '%s' % record[self.NAME_TO_INTERNAL['sAMAccountName']]
-
-            if self.__printUserStatus is True:
-                # Enabled / disabled users
-                if record[self.NAME_TO_INTERNAL['userAccountControl']] is not None:
-                    if '{0:08b}'.format(record[self.NAME_TO_INTERNAL['userAccountControl']])[-2:-1] == '1':
-                        userAccountStatus = 'Disabled'
-                    elif '{0:08b}'.format(record[self.NAME_TO_INTERNAL['userAccountControl']])[-2:-1] == '0':
-                        userAccountStatus = 'Enabled'
-                else:
-                    userAccountStatus = 'N/A'
-
-            if record[self.NAME_TO_INTERNAL['pwdLastSet']] is not None:
-                pwdLastSet = self.__fileTimeToDateTime(record[self.NAME_TO_INTERNAL['pwdLastSet']])
-            else:
-                pwdLastSet = 'N/A'
-
-            answer = "%s:%s:%s:%s:::" % (userName, rid, hexlify(LMHash).decode('utf-8'), hexlify(NTHash).decode('utf-8'))
-            if self.__pwdLastSet is True:
-                answer = "%s (pwdLastSet=%s)" % (answer, pwdLastSet)
-            if self.__printUserStatus is True:
-                answer = "%s (status=%s)" % (answer, userAccountStatus)
-
-            self.__perSecretCallback(NTDSHashes.SECRET_TYPE.NTDS, answer)
-
-            if outputFile is not None:
-                self.__writeOutput(outputFile, answer + '\n')
-
-            if self.__history:
-                LMHistory = []
-                NTHistory = []
-                if record[self.NAME_TO_INTERNAL['lmPwdHistory']] is not None:
-                    encryptedLMHistory = self.CRYPTED_HISTORY(unhexlify(record[self.NAME_TO_INTERNAL['lmPwdHistory']]))
-                    tmpLMHistory = self.__removeRC4Layer(encryptedLMHistory)
-                    for i in range(0, len(tmpLMHistory) // 16):
-                        LMHash = self.__removeDESLayer(tmpLMHistory[i * 16:(i + 1) * 16], rid)
-                        LMHistory.append(LMHash)
-
-                if record[self.NAME_TO_INTERNAL['ntPwdHistory']] is not None:
-                    encryptedNTHistory = self.CRYPTED_HISTORY(unhexlify(record[self.NAME_TO_INTERNAL['ntPwdHistory']]))
-
-                    if encryptedNTHistory['Header'][:4] == b'\x13\x00\x00\x00':
+                if record[self.NAME_TO_INTERNAL['dBCSPwd']] is not None:
+                    encryptedLMHash = self.CRYPTED_HASH(unhexlify(record[self.NAME_TO_INTERNAL['dBCSPwd']]))
+                    if encryptedLMHash['Header'][:4] == b'\x13\x00\x00\x00':
                         # Win2016 TP4 decryption is different
-                        encryptedNTHistory = self.CRYPTED_HASHW16(
-                            unhexlify(record[self.NAME_TO_INTERNAL['ntPwdHistory']]))
-                        pekIndex = hexlify(encryptedNTHistory['Header'])
-                        tmpNTHistory = self.__cryptoCommon.decryptAES(self.__PEK[int(pekIndex[8:10])],
-                                                                      encryptedNTHistory['EncryptedHash'],
-                                                                      encryptedNTHistory['KeyMaterial'])
+                        encryptedLMHash = self.CRYPTED_HASHW16(unhexlify(record[self.NAME_TO_INTERNAL['dBCSPwd']]))
+                        pekIndex = hexlify(encryptedLMHash['Header'])
+                        tmpLMHash = self.__cryptoCommon.decryptAES(self.__PEK[int(pekIndex[8:10])],
+                                                                   encryptedLMHash['EncryptedHash'][:16],
+                                                                   encryptedLMHash['KeyMaterial'])
                     else:
-                        tmpNTHistory = self.__removeRC4Layer(encryptedNTHistory)
+                        tmpLMHash = self.__removeRC4Layer(encryptedLMHash)
+                    LMHash = self.__removeDESLayer(tmpLMHash, rid)
+                else:
+                    LMHash = ntlm.LMOWFv1('', '')
 
-                    for i in range(0, len(tmpNTHistory) // 16):
-                        NTHash = self.__removeDESLayer(tmpNTHistory[i * 16:(i + 1) * 16], rid)
-                        NTHistory.append(NTHash)
-
-                for i, (LMHash, NTHash) in enumerate(
-                        map(lambda l, n: (l, n) if l else ('', n), LMHistory[1:], NTHistory[1:])):
-                    if self.__noLMHash:
-                        lmhash = hexlify(ntlm.LMOWFv1('', ''))
+                if record[self.NAME_TO_INTERNAL['unicodePwd']] is not None:
+                    encryptedNTHash = self.CRYPTED_HASH(unhexlify(record[self.NAME_TO_INTERNAL['unicodePwd']]))
+                    if encryptedNTHash['Header'][:4] == b'\x13\x00\x00\x00':
+                        # Win2016 TP4 decryption is different
+                        encryptedNTHash = self.CRYPTED_HASHW16(unhexlify(record[self.NAME_TO_INTERNAL['unicodePwd']]))
+                        pekIndex = hexlify(encryptedNTHash['Header'])
+                        tmpNTHash = self.__cryptoCommon.decryptAES(self.__PEK[int(pekIndex[8:10])],
+                                                                   encryptedNTHash['EncryptedHash'][:16],
+                                                                   encryptedNTHash['KeyMaterial'])
                     else:
-                        lmhash = hexlify(LMHash)
+                        tmpNTHash = self.__removeRC4Layer(encryptedNTHash)
+                    NTHash = self.__removeDESLayer(tmpNTHash, rid)
+                else:
+                    NTHash = ntlm.NTOWFv1('', '')
 
-                    answer = "%s_history%d:%s:%s:%s:::" % (userName, i, rid, lmhash.decode('utf-8'),
-                                                           hexlify(NTHash).decode('utf-8'))
-                    if outputFile is not None:
-                        self.__writeOutput(outputFile, answer + '\n')
-                    self.__perSecretCallback(NTDSHashes.SECRET_TYPE.NTDS, answer)
+                if record[self.NAME_TO_INTERNAL['userPrincipalName']] is not None:
+                    domain = record[self.NAME_TO_INTERNAL['userPrincipalName']].split('@')[-1]
+                    userName = '%s\\%s' % (domain, record[self.NAME_TO_INTERNAL['sAMAccountName']])
+                else:
+                    userName = '%s' % record[self.NAME_TO_INTERNAL['sAMAccountName']]
+
+                if self.__printUserStatus is True:
+                    # Enabled / disabled users
+                    if record[self.NAME_TO_INTERNAL['userAccountControl']] is not None:
+                        if '{0:08b}'.format(record[self.NAME_TO_INTERNAL['userAccountControl']])[-2:-1] == '1':
+                            userAccountStatus = 'Disabled'
+                        elif '{0:08b}'.format(record[self.NAME_TO_INTERNAL['userAccountControl']])[-2:-1] == '0':
+                            userAccountStatus = 'Enabled'
+                    else:
+                        userAccountStatus = 'N/A'
+
+                if record[self.NAME_TO_INTERNAL['pwdLastSet']] is not None:
+                    pwdLastSet = self.__fileTimeToDateTime(record[self.NAME_TO_INTERNAL['pwdLastSet']])
+                else:
+                    pwdLastSet = 'N/A'
+
+                answer = "%s:%s:%s:%s:::" % (userName, rid, hexlify(LMHash).decode('utf-8'), hexlify(NTHash).decode('utf-8'))
+                if self.__pwdLastSet is True:
+                    answer = "%s (pwdLastSet=%s)" % (answer, pwdLastSet)
+                if self.__printUserStatus is True:
+                    answer = "%s (status=%s)" % (answer, userAccountStatus)
+
+                self.__perSecretCallback(NTDSHashes.SECRET_TYPE.NTDS, answer)
+
+                if outputFile is not None:
+                    self.__writeOutput(outputFile, answer + '\n')
+
+                if self.__history:
+                    LMHistory = []
+                    NTHistory = []
+                    if record[self.NAME_TO_INTERNAL['lmPwdHistory']] is not None:
+                        encryptedLMHistory = self.CRYPTED_HISTORY(unhexlify(record[self.NAME_TO_INTERNAL['lmPwdHistory']]))
+                        tmpLMHistory = self.__removeRC4Layer(encryptedLMHistory)
+                        for i in range(0, len(tmpLMHistory) // 16):
+                            LMHash = self.__removeDESLayer(tmpLMHistory[i * 16:(i + 1) * 16], rid)
+                            LMHistory.append(LMHash)
+
+                    if record[self.NAME_TO_INTERNAL['ntPwdHistory']] is not None:
+                        encryptedNTHistory = self.CRYPTED_HISTORY(unhexlify(record[self.NAME_TO_INTERNAL['ntPwdHistory']]))
+
+                        if encryptedNTHistory['Header'][:4] == b'\x13\x00\x00\x00':
+                            # Win2016 TP4 decryption is different
+                            encryptedNTHistory = self.CRYPTED_HASHW16(
+                                unhexlify(record[self.NAME_TO_INTERNAL['ntPwdHistory']]))
+                            pekIndex = hexlify(encryptedNTHistory['Header'])
+                            tmpNTHistory = self.__cryptoCommon.decryptAES(self.__PEK[int(pekIndex[8:10])],
+                                                                          encryptedNTHistory['EncryptedHash'],
+                                                                          encryptedNTHistory['KeyMaterial'])
+                        else:
+                            tmpNTHistory = self.__removeRC4Layer(encryptedNTHistory)
+
+                        for i in range(0, len(tmpNTHistory) // 16):
+                            NTHash = self.__removeDESLayer(tmpNTHistory[i * 16:(i + 1) * 16], rid)
+                            NTHistory.append(NTHash)
+
+                    for i, (LMHash, NTHash) in enumerate(
+                            map(lambda l, n: (l, n) if l else ('', n), LMHistory[1:], NTHistory[1:])):
+                        if self.__noLMHash:
+                            lmhash = hexlify(ntlm.LMOWFv1('', ''))
+                        else:
+                            lmhash = hexlify(LMHash)
+
+                        answer = "%s_history%d:%s:%s:%s:::" % (userName, i, rid, lmhash.decode('utf-8'),
+                                                               hexlify(NTHash).decode('utf-8'))
+                        if outputFile is not None:
+                            self.__writeOutput(outputFile, answer + '\n')
+                        self.__perSecretCallback(NTDSHashes.SECRET_TYPE.NTDS, answer)
+
+            else:
+                # Hackish way to get domain FQDN from NTDS, there's probably a better way...
+                # We obtain the FQDN from a computer's dNSHostName
+                # Domain FQDN is used for Kerberos AES trust keys computation
+                if not self.__currentDomain:
+                    if record[self.NAME_TO_INTERNAL['dNSHostName']] is not None:
+                        dNSHostName = record[self.NAME_TO_INTERNAL['dNSHostName']]
+                        self.__currentDomain = ".".join(dNSHostName.split(".")[1:]).upper()
+
+                if record[self.NAME_TO_INTERNAL['trustPartner']] is not None:
+                    trustPartner = record[self.NAME_TO_INTERNAL['trustPartner']]
+                else:
+                    trustPartner = 'unknown'
+
+                if record[self.NAME_TO_INTERNAL['trustAuthIncoming']] is not None:
+                    encryptedTrustAuthIncoming = self.CRYPTED_HASH(unhexlify(record[self.NAME_TO_INTERNAL['trustAuthIncoming']]))
+                    if encryptedTrustAuthIncoming['Header'][:4] == b'\x13\x00\x00\x00':
+                        # Win2016 TP4 decryption is different
+                        encryptedTrustAuthIncoming = self.CRYPTED_HASHW16(unhexlify(record[self.NAME_TO_INTERNAL['trustAuthIncoming']]))
+                        pekIndex = hexlify(encryptedTrustAuthIncoming['Header'])
+                        trustAuthIncoming = self.__cryptoCommon.decryptAES(self.__PEK[int(pekIndex[8:10])],
+                                                                              encryptedTrustAuthIncoming['EncryptedHash'],
+                                                                              encryptedTrustAuthIncoming['KeyMaterial'])
+                    else:
+                        trustAuthIncoming = self.__removeRC4Layer(encryptedTrustAuthIncoming)
+                    try:
+                        currentIncomingKey, previousIncomingKey = self.__parseTrustKeyStruct(trustAuthIncoming)
+                    except:
+                        LOG.debug("Cannot parse incoming trust key from trust record %s" % record[self.NAME_TO_INTERNAL['name']])
+                        currentIncomingKey, previousIncomingKey = None, None
+                else:
+                    currentIncomingKey = None
+                    previousIncomingKey = None
+
+                if record[self.NAME_TO_INTERNAL['trustAuthOutgoing']] is not None:
+                    encryptedTrustAuthOutgoing = self.CRYPTED_HASH(unhexlify(record[self.NAME_TO_INTERNAL['trustAuthOutgoing']]))
+                    if encryptedTrustAuthOutgoing['Header'][:4] == b'\x13\x00\x00\x00':
+                        # Win2016 TP4 decryption is different
+                        encryptedTrustAuthOutgoing = self.CRYPTED_HASHW16(unhexlify(record[self.NAME_TO_INTERNAL['trustAuthOutgoing']]))
+                        pekIndex = hexlify(encryptedTrustAuthOutgoing['Header'])
+                        trustAuthOutgoing = self.__cryptoCommon.decryptAES(self.__PEK[int(pekIndex[8:10])],
+                                                                              encryptedTrustAuthOutgoing['EncryptedHash'],
+                                                                              encryptedTrustAuthOutgoing['KeyMaterial'])
+                    else:
+                        trustAuthOutgoing = self.__removeRC4Layer(encryptedTrustAuthOutgoing)
+                    try:
+                        currentOutgoingKey, previousOutgoingKey = self.__parseTrustKeyStruct(trustAuthOutgoing)
+                    except:
+                        LOG.debug("Cannot parse outgoing trust key from trust record %s" % record[self.NAME_TO_INTERNAL['name']])
+                        currentOutgoingKey, previousOutgoingKey = None, None
+                else:
+                    currentOutgoingKey = None
+                    previousOutgoingKey = None
+
+                if currentIncomingKey:
+                    self.__processTrustKey(trustPartner, currentIncomingKey, isIn=True, isHistory=False)
+                if currentOutgoingKey:
+                    self.__processTrustKey(trustPartner, currentOutgoingKey, isIn=False, isHistory=False)
+
+                if self.__history:
+                    if previousIncomingKey:
+                        self.__processTrustKey(trustPartner, previousIncomingKey, isIn=True, isHistory=True)
+                    if previousOutgoingKey:
+                        self.__processTrustKey(trustPartner, previousOutgoingKey, isIn=False, isHistory=True)
+
         else:
             replyVersion = 'V%d' %record['pdwOutVersion']
             LOG.debug('Decrypting hash for user: %s' % record['pmsgOut'][replyVersion]['pNC']['StringName'][:-1])
@@ -2354,106 +2571,156 @@ class NTDSHashes:
                     attId = attr['attrTyp']
                     LOOKUP_TABLE = self.NAME_TO_ATTRTYP
 
-                if attId == LOOKUP_TABLE['dBCSPwd']:
-                    if attr['AttrVal']['valCount'] > 0:
-                        encrypteddBCSPwd = b''.join(attr['AttrVal']['pAVal'][0]['pVal'])
-                        encryptedLMHash = drsuapi.DecryptAttributeValue(self.__remoteOps.getDrsr(), encrypteddBCSPwd)
-                        LMHash = drsuapi.removeDESLayer(encryptedLMHash, rid)
-                    else:
-                        LMHash = ntlm.LMOWFv1('', '')
-                elif attId == LOOKUP_TABLE['unicodePwd']:
-                    if attr['AttrVal']['valCount'] > 0:
-                        encryptedUnicodePwd = b''.join(attr['AttrVal']['pAVal'][0]['pVal'])
-                        encryptedNTHash = drsuapi.DecryptAttributeValue(self.__remoteOps.getDrsr(), encryptedUnicodePwd)
-                        NTHash = drsuapi.removeDESLayer(encryptedNTHash, rid)
-                    else:
-                        NTHash = ntlm.NTOWFv1('', '')
-                elif attId == LOOKUP_TABLE['userPrincipalName']:
-                    if attr['AttrVal']['valCount'] > 0:
-                        try:
-                            domain = b''.join(attr['AttrVal']['pAVal'][0]['pVal']).decode('utf-16le').split('@')[-1]
-                        except:
+                if not self.__dumpTrustKeys:
+                    if attId == LOOKUP_TABLE['dBCSPwd']:
+                        if attr['AttrVal']['valCount'] > 0:
+                            encrypteddBCSPwd = b''.join(attr['AttrVal']['pAVal'][0]['pVal'])
+                            encryptedLMHash = drsuapi.DecryptAttributeValue(self.__remoteOps.getDrsr(), encrypteddBCSPwd)
+                            LMHash = drsuapi.removeDESLayer(encryptedLMHash, rid)
+                        else:
+                            LMHash = ntlm.LMOWFv1('', '')
+                    elif attId == LOOKUP_TABLE['unicodePwd']:
+                        if attr['AttrVal']['valCount'] > 0:
+                            encryptedUnicodePwd = b''.join(attr['AttrVal']['pAVal'][0]['pVal'])
+                            encryptedNTHash = drsuapi.DecryptAttributeValue(self.__remoteOps.getDrsr(), encryptedUnicodePwd)
+                            NTHash = drsuapi.removeDESLayer(encryptedNTHash, rid)
+                        else:
+                            NTHash = ntlm.NTOWFv1('', '')
+                    elif attId == LOOKUP_TABLE['userPrincipalName']:
+                        if attr['AttrVal']['valCount'] > 0:
+                            try:
+                                domain = b''.join(attr['AttrVal']['pAVal'][0]['pVal']).decode('utf-16le').split('@')[-1]
+                            except:
+                                domain = None
+                        else:
                             domain = None
-                    else:
-                        domain = None
-                elif attId == LOOKUP_TABLE['sAMAccountName']:
-                    if attr['AttrVal']['valCount'] > 0:
-                        try:
-                            userName = b''.join(attr['AttrVal']['pAVal'][0]['pVal']).decode('utf-16le')
-                        except:
+                    elif attId == LOOKUP_TABLE['sAMAccountName']:
+                        if attr['AttrVal']['valCount'] > 0:
+                            try:
+                                userName = b''.join(attr['AttrVal']['pAVal'][0]['pVal']).decode('utf-16le')
+                            except:
+                                LOG.error('Cannot get sAMAccountName for %s' % record['pmsgOut'][replyVersion]['pNC']['StringName'][:-1])
+                                userName = 'unknown'
+                        else:
                             LOG.error('Cannot get sAMAccountName for %s' % record['pmsgOut'][replyVersion]['pNC']['StringName'][:-1])
                             userName = 'unknown'
-                    else:
-                        LOG.error('Cannot get sAMAccountName for %s' % record['pmsgOut'][replyVersion]['pNC']['StringName'][:-1])
-                        userName = 'unknown'
-                elif attId == LOOKUP_TABLE['objectSid']:
-                    if attr['AttrVal']['valCount'] > 0:
-                        objectSid = b''.join(attr['AttrVal']['pAVal'][0]['pVal'])
-                    else:
-                        LOG.error('Cannot get objectSid for %s' % record['pmsgOut'][replyVersion]['pNC']['StringName'][:-1])
-                        objectSid = rid
-                elif attId == LOOKUP_TABLE['pwdLastSet']:
-                    if attr['AttrVal']['valCount'] > 0:
-                        try:
-                            pwdLastSet = self.__fileTimeToDateTime(unpack('<Q', b''.join(attr['AttrVal']['pAVal'][0]['pVal']))[0])
-                        except:
-                            LOG.error('Cannot get pwdLastSet for %s' % record['pmsgOut'][replyVersion]['pNC']['StringName'][:-1])
-                            pwdLastSet = 'N/A'
-                elif self.__printUserStatus and attId == LOOKUP_TABLE['userAccountControl']:
-                    if attr['AttrVal']['valCount'] > 0:
-                        if (unpack('<L', b''.join(attr['AttrVal']['pAVal'][0]['pVal']))[0]) & samr.UF_ACCOUNTDISABLE:
-                            userAccountStatus = 'Disabled'
+                    elif attId == LOOKUP_TABLE['objectSid']:
+                        if attr['AttrVal']['valCount'] > 0:
+                            objectSid = b''.join(attr['AttrVal']['pAVal'][0]['pVal'])
                         else:
-                            userAccountStatus = 'Enabled'
-                    else:
-                        userAccountStatus = 'N/A'
+                            LOG.error('Cannot get objectSid for %s' % record['pmsgOut'][replyVersion]['pNC']['StringName'][:-1])
+                            objectSid = rid
+                    elif attId == LOOKUP_TABLE['pwdLastSet']:
+                        if attr['AttrVal']['valCount'] > 0:
+                            try:
+                                pwdLastSet = self.__fileTimeToDateTime(unpack('<Q', b''.join(attr['AttrVal']['pAVal'][0]['pVal']))[0])
+                            except:
+                                LOG.error('Cannot get pwdLastSet for %s' % record['pmsgOut'][replyVersion]['pNC']['StringName'][:-1])
+                                pwdLastSet = 'N/A'
+                    elif self.__printUserStatus and attId == LOOKUP_TABLE['userAccountControl']:
+                        if attr['AttrVal']['valCount'] > 0:
+                            if (unpack('<L', b''.join(attr['AttrVal']['pAVal'][0]['pVal']))[0]) & samr.UF_ACCOUNTDISABLE:
+                                userAccountStatus = 'Disabled'
+                            else:
+                                userAccountStatus = 'Enabled'
+                        else:
+                            userAccountStatus = 'N/A'
+
+                    if self.__history:
+                        if attId == LOOKUP_TABLE['lmPwdHistory']:
+                            if attr['AttrVal']['valCount'] > 0:
+                                encryptedLMHistory = b''.join(attr['AttrVal']['pAVal'][0]['pVal'])
+                                tmpLMHistory = drsuapi.DecryptAttributeValue(self.__remoteOps.getDrsr(), encryptedLMHistory)
+                                for i in range(0, len(tmpLMHistory) // 16):
+                                    LMHashHistory = drsuapi.removeDESLayer(tmpLMHistory[i * 16:(i + 1) * 16], rid)
+                                    LMHistory.append(LMHashHistory)
+                            else:
+                                LOG.debug('No lmPwdHistory for user %s' % record['pmsgOut'][replyVersion]['pNC']['StringName'][:-1])
+                        elif attId == LOOKUP_TABLE['ntPwdHistory']:
+                            if attr['AttrVal']['valCount'] > 0:
+                                encryptedNTHistory = b''.join(attr['AttrVal']['pAVal'][0]['pVal'])
+                                tmpNTHistory = drsuapi.DecryptAttributeValue(self.__remoteOps.getDrsr(), encryptedNTHistory)
+                                for i in range(0, len(tmpNTHistory) // 16):
+                                    NTHashHistory = drsuapi.removeDESLayer(tmpNTHistory[i * 16:(i + 1) * 16], rid)
+                                    NTHistory.append(NTHashHistory)
+                            else:
+                                LOG.debug('No ntPwdHistory for user %s' % record['pmsgOut'][replyVersion]['pNC']['StringName'][:-1])
+
+                else:
+                    if attId == LOOKUP_TABLE['trustPartner']:
+                        if attr['AttrVal']['valCount'] > 0:
+                            try:
+                                trustPartner = b''.join(attr['AttrVal']['pAVal'][0]['pVal']).decode('utf-16le')
+                            except:
+                                LOG.error('Cannot get trustPartner for %s' % record['pmsgOut'][replyVersion]['pNC']['StringName'][:-1])
+                                trustPartner = 'unknown'
+                        else:
+                            LOG.error('Cannot get trustPartner for %s' % record['pmsgOut'][replyVersion]['pNC']['StringName'][:-1])
+                            trustPartner = 'unknown'
+                    elif attId == LOOKUP_TABLE['trustAuthIncoming']:
+                        if attr['AttrVal']['valCount'] > 0:
+                            try:
+                                encryptedTrustAuthIncoming = b''.join(attr['AttrVal']['pAVal'][0]['pVal'])
+                                trustAuthIncoming = drsuapi.DecryptAttributeValue(self.__remoteOps.getDrsr(), encryptedTrustAuthIncoming)
+                                currentIncomingKey, previousIncomingKey = self.__parseTrustKeyStruct(trustAuthIncoming)
+                            except:
+                                LOG.debug('Cannot get trustAuthIncoming for %s' % record['pmsgOut'][replyVersion]['pNC']['StringName'][:-1])
+                                currentIncomingKey, previousIncomingKey = None, None
+                        else:
+                            LOG.debug('Cannot get trustAuthIncoming for %s' % record['pmsgOut'][replyVersion]['pNC']['StringName'][:-1])
+                            currentIncomingKey, previousIncomingKey = None, None
+                    elif attId == LOOKUP_TABLE['trustAuthOutgoing']:
+                        if attr['AttrVal']['valCount'] > 0:
+                            try:
+                                encryptedTrustAuthOutgoing = b''.join(attr['AttrVal']['pAVal'][0]['pVal'])
+                                trustAuthOutgoing = drsuapi.DecryptAttributeValue(self.__remoteOps.getDrsr(), encryptedTrustAuthOutgoing)
+                                currentOutgoingKey, previousOutgoingKey = self.__parseTrustKeyStruct(trustAuthOutgoing)
+                            except:
+                                LOG.debug('Cannot get trustAuthOutgoing for %s' % record['pmsgOut'][replyVersion]['pNC']['StringName'][:-1])
+                                currentOutgoingKey, previousOutgoingKey = None, None
+                        else:
+                            LOG.debug('Cannot get trustAuthOutgoing for %s' % record['pmsgOut'][replyVersion]['pNC']['StringName'][:-1])
+                            currentOutgoingKey, previousOutgoingKey = None, None
+
+            if not self.__dumpTrustKeys:
+                if domain is not None:
+                    userName = '%s\\%s' % (domain, userName)
+
+                answer = "%s:%s:%s:%s:::" % (userName, rid, hexlify(LMHash).decode('utf-8'), hexlify(NTHash).decode('utf-8'))
+                if self.__pwdLastSet is True:
+                    answer = "%s (pwdLastSet=%s)" % (answer, pwdLastSet)
+                if self.__printUserStatus is True:
+                    answer = "%s (status=%s)" % (answer, userAccountStatus)
+                self.__perSecretCallback(NTDSHashes.SECRET_TYPE.NTDS, answer)
+
+                if outputFile is not None:
+                    self.__writeOutput(outputFile, answer + '\n')
 
                 if self.__history:
-                    if attId == LOOKUP_TABLE['lmPwdHistory']:
-                        if attr['AttrVal']['valCount'] > 0:
-                            encryptedLMHistory = b''.join(attr['AttrVal']['pAVal'][0]['pVal'])
-                            tmpLMHistory = drsuapi.DecryptAttributeValue(self.__remoteOps.getDrsr(), encryptedLMHistory)
-                            for i in range(0, len(tmpLMHistory) // 16):
-                                LMHashHistory = drsuapi.removeDESLayer(tmpLMHistory[i * 16:(i + 1) * 16], rid)
-                                LMHistory.append(LMHashHistory)
+                    for i, (LMHashHistory, NTHashHistory) in enumerate(
+                            map(lambda l, n: (l, n) if l else ('', n), LMHistory[1:], NTHistory[1:])):
+                        if self.__noLMHash:
+                            lmhash = hexlify(ntlm.LMOWFv1('', ''))
                         else:
-                            LOG.debug('No lmPwdHistory for user %s' % record['pmsgOut'][replyVersion]['pNC']['StringName'][:-1])
-                    elif attId == LOOKUP_TABLE['ntPwdHistory']:
-                        if attr['AttrVal']['valCount'] > 0:
-                            encryptedNTHistory = b''.join(attr['AttrVal']['pAVal'][0]['pVal'])
-                            tmpNTHistory = drsuapi.DecryptAttributeValue(self.__remoteOps.getDrsr(), encryptedNTHistory)
-                            for i in range(0, len(tmpNTHistory) // 16):
-                                NTHashHistory = drsuapi.removeDESLayer(tmpNTHistory[i * 16:(i + 1) * 16], rid)
-                                NTHistory.append(NTHashHistory)
-                        else:
-                            LOG.debug('No ntPwdHistory for user %s' % record['pmsgOut'][replyVersion]['pNC']['StringName'][:-1])
+                            lmhash = hexlify(LMHashHistory)
 
-            if domain is not None:
-                userName = '%s\\%s' % (domain, userName)
+                        answer = "%s_history%d:%s:%s:%s:::" % (userName, i, rid, lmhash.decode('utf-8'),
+                                                               hexlify(NTHashHistory).decode('utf-8'))
+                        self.__perSecretCallback(NTDSHashes.SECRET_TYPE.NTDS, answer)
+                        if outputFile is not None:
+                            self.__writeOutput(outputFile, answer + '\n')
 
-            answer = "%s:%s:%s:%s:::" % (userName, rid, hexlify(LMHash).decode('utf-8'), hexlify(NTHash).decode('utf-8'))
-            if self.__pwdLastSet is True:
-                answer = "%s (pwdLastSet=%s)" % (answer, pwdLastSet)
-            if self.__printUserStatus is True:
-                answer = "%s (status=%s)" % (answer, userAccountStatus)
-            self.__perSecretCallback(NTDSHashes.SECRET_TYPE.NTDS, answer)
+            else:
+                if currentIncomingKey:
+                    self.__processTrustKey(trustPartner, currentIncomingKey, isIn=True, isHistory=False)
+                if currentOutgoingKey:
+                    self.__processTrustKey(trustPartner, currentOutgoingKey, isIn=False, isHistory=False)
 
-            if outputFile is not None:
-                self.__writeOutput(outputFile, answer + '\n')
-
-            if self.__history:
-                for i, (LMHashHistory, NTHashHistory) in enumerate(
-                        map(lambda l, n: (l, n) if l else ('', n), LMHistory[1:], NTHistory[1:])):
-                    if self.__noLMHash:
-                        lmhash = hexlify(ntlm.LMOWFv1('', ''))
-                    else:
-                        lmhash = hexlify(LMHashHistory)
-
-                    answer = "%s_history%d:%s:%s:%s:::" % (userName, i, rid, lmhash.decode('utf-8'),
-                                                           hexlify(NTHashHistory).decode('utf-8'))
-                    self.__perSecretCallback(NTDSHashes.SECRET_TYPE.NTDS, answer)
-                    if outputFile is not None:
-                        self.__writeOutput(outputFile, answer + '\n')
+                if self.__history:
+                    if previousIncomingKey:
+                        self.__processTrustKey(trustPartner, previousIncomingKey, isIn=True, isHistory=True)
+                    if previousOutgoingKey:
+                        self.__processTrustKey(trustPartner, previousOutgoingKey, isIn=False, isHistory=True)
 
         if outputFile is not None:
             outputFile.flush()
@@ -2517,7 +2784,7 @@ class NTDSHashes:
                     for record in self.__tmpUsers:
                         try:
                             self.__decryptHash(record, outputFile=hashesOutputFile)
-                            if self.__justNTLM is False:
+                            if self.__justNTLM is False and self.__dumpTrustKeys is False:
                                 self.__decryptSupplementalInfo(record, None, keysOutputFile, clearTextOutputFile)
                         except Exception as e:
                             LOG.debug('Exception', exc_info=True)
@@ -2542,9 +2809,10 @@ class NTDSHashes:
                         if record is None:
                             break
                         try:
-                            if record[self.NAME_TO_INTERNAL['sAMAccountType']] in self.ACCOUNT_TYPES:
+                            if record[self.NAME_TO_INTERNAL['sAMAccountType']] in self.ACCOUNT_TYPES or \
+                            record[self.NAME_TO_INTERNAL['trustPartner']] is not None:
                                 self.__decryptHash(record, outputFile=hashesOutputFile)
-                                if self.__justNTLM is False:
+                                if self.__justNTLM is False and self.__dumpTrustKeys is False:
                                     self.__decryptSupplementalInfo(record, None, keysOutputFile, clearTextOutputFile)
                         except Exception as e:
                             LOG.debug('Exception', exc_info=True)
@@ -2614,6 +2882,23 @@ class NTDSHashes:
                         LOG.error("Error while processing user!")
                         LOG.debug("Exception", exc_info=True)
                         LOG.error(str(e))
+                elif self.__dumpTrustKeys:
+                    domainTrusts = self.__remoteOps.getDomainTrustsLDAP()
+                    for trust in domainTrusts:
+                        trustRecord = self.__remoteOps.DRSGetNCChanges(trust)
+                        replyVersion = 'V%d' % trustRecord['pdwOutVersion']
+                        if trustRecord['pmsgOut'][replyVersion]['cNumObjects'] == 0:
+                            raise Exception('DRSGetNCChanges didn\'t return any object!')
+
+                        try:
+                            self.__decryptHash(trustRecord,
+                                               trustRecord['pmsgOut'][replyVersion]['PrefixTableSrc']['pPrefixEntry'],
+                                               hashesOutputFile)
+
+                        except Exception as e:
+                            LOG.error("Error while processing trust %s !" % trust)
+                            LOG.debug("Exception", exc_info=True)
+                            LOG.error(str(e))
                 elif self.__ldapFilter is not None:
                     resp = self.__remoteOps.getDomainUsersLDAP(self.__ldapFilter)
                     formatOffered = drsuapi.DS_NAME_FORMAT.DS_NT4_ACCOUNT_NAME

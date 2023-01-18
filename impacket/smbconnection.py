@@ -304,6 +304,7 @@ class SMBConnection:
 
         self._kdcHost = kdcHost
         self._useCache = useCache
+        self._doKerberos = True
 
         if TGT is not None or TGS is not None:
             useCache = False

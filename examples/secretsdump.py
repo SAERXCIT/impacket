@@ -107,6 +107,7 @@ class DumpSecrets:
         self.__ldapFilter = options.ldapfilter
         self.__pwdLastSet = options.pwd_last_set
         self.__printUserStatus= options.user_status
+        self.__dumpTrustKeys = options.trust_keys
         self.__resumeFileName = options.resumefile
         self.__canProcessSAMLSA = True
         self.__kdcHost = options.dc_ip
@@ -181,8 +182,8 @@ class DumpSecrets:
             else:
                 self.__isRemote = True
                 bootKey = None
-                if self.__ldapFilter is not None:
-                    logging.info('Querying %s for information about domain users via LDAP' % self.__domain)
+                if self.__ldapFilter is not None or self.__dumpTrustKeys:
+                    logging.info('Querying %s for information about domain users or trusts via LDAP' % self.__domain)
                     try:
                         self.ldapConnect()
                     except Exception as e:
@@ -274,7 +275,8 @@ class DumpSecrets:
                                                useVSSMethod=self.__useVSSMethod, justNTLM=self.__justDCNTLM,
                                                pwdLastSet=self.__pwdLastSet, resumeSession=self.__resumeFileName,
                                                outputFileName=self.__outputFileName, justUser=self.__justUser,
-                                               ldapFilter=self.__ldapFilter, printUserStatus=self.__printUserStatus)
+                                               ldapFilter=self.__ldapFilter, printUserStatus=self.__printUserStatus,
+                                               dumpTrustKeys=self.__dumpTrustKeys)
                 try:
                     self.__NTDSHashes.dump()
                 except Exception as e:
@@ -387,6 +389,7 @@ if __name__ == '__main__':
     group.add_argument('-user-status', action='store_true', default=False,
                         help='Display whether or not the user is disabled')
     group.add_argument('-history', action='store_true', help='Dump password history, and LSA secrets OldVal')
+    group.add_argument('-trust-keys', action='store_true', default=False, help='Dump trust keys (allows forging cross-realm AES TGTs)')
 
     group = parser.add_argument_group('authentication')
     group.add_argument('-hashes', action="store", metavar = "LMHASH:NTHASH", help='NTLM hashes, format is LMHASH:NTHASH')
