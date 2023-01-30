@@ -13,7 +13,6 @@ Merged PRs
 * [#1291](https://github.com/SecureAuthCorp/impacket/pull/1291): [dacledit] New example script for DACL manipulation
 * [#1318](https://github.com/SecureAuthCorp/impacket/pull/1318): [ntlmrelayx] Dump ADCS: bug fixes
 * [#1323](https://github.com/SecureAuthCorp/impacket/pull/1323): [owneredit.py] New example script to change an object's owner
-* [#1329](https://github.com/SecureAuthCorp/impacket/pull/1329): Use a custom LDAP filter during a DCSync in secretsdump.py
 * [#1367](https://github.com/SecureAuthCorp/impacket/pull/1367): Add UTC date to cached domain logon information
 * [#1391](https://github.com/SecureAuthCorp/impacket/pull/1391): Ticketer extra-pac implementation (UPN_DNS_INFO, PAC_ATTRIBUTES_INFO, PAC_REQUESTOR)
 * [#1393](https://github.com/SecureAuthCorp/impacket/pull/1393): [rbcd.py] Handled SID not found in LDAP error
@@ -21,9 +20,12 @@ Merged PRs
 * [#1425](https://github.com/SecureAuthCorp/impacket/pull/1425): Add SCCM NTLM Relay Attack
 * [#1428](https://github.com/SecureAuthCorp/impacket/pull/1428): [ntlmrelayx/adcs] Encode and handle non-alphanumeric chars in CertificateName
 * [#1431](https://github.com/SecureAuthCorp/impacket/pull/1431): Update ccache.py to enhance the ability of dealing with cross realm ticket
+* [#1432](https://github.com/SecureAuthCorp/impacket/pull/1432): Update httprelayclient.py to force NTLM auth if anonymous auth is enabled (ADCS)
 * [#1442](https://github.com/SecureAuthCorp/impacket/pull/1442): Adds relay to ICPR over RPC
 * [#1449](https://github.com/SecureAuthCorp/impacket/pull/1449): Allow weak TLS ciphers for LDAP connections
 * [#1458](https://github.com/SecureAuthCorp/impacket/pull/1458): SID Bruteforce through ntlmrelay over SMB
+* [#1462](https://github.com/SecureAuthCorp/impacket/pull/1462): Filter socks connections by Admin only
+* [#1470](https://github.com/SecureAuthCorp/impacket/pull/1470): [secretsdump] Fix -use-vss for use in all languages
 
 Impacket
 ========
