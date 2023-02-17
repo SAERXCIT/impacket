@@ -8,6 +8,7 @@ Merged PRs
 * [#1224](https://github.com/SecureAuthCorp/impacket/pull/1224): Added renameMachine.py
 * [#1253](https://github.com/SecureAuthCorp/impacket/pull/1253): Make default ntlmrelayx dump SAM and LSA
 * [#1262](https://github.com/SecureAuthCorp/impacket/pull/1262): [secretsdump] Added parsing of services passwords (SCM)
+* [#1270](https://github.com/SecureAuthCorp/impacket/pull/1270): Fix ticketer duration to support default 10 hours tickets
 * [#1288](https://github.com/SecureAuthCorp/impacket/pull/1288): [ntlmrelayx] LDAP attack: bypass computer creation restrictions with CVE-2021-34470
 * [#1289](https://github.com/SecureAuthCorp/impacket/pull/1289): [ntlmrelayx] LDAP attack: Add DNS records through LDAP
 * [#1291](https://github.com/SecureAuthCorp/impacket/pull/1291): [dacledit] New example script for DACL manipulation
