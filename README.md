@@ -22,10 +22,10 @@ Merged PRs
 * [#1431](https://github.com/SecureAuthCorp/impacket/pull/1431): Update ccache.py to enhance the ability of dealing with cross realm ticket
 * [#1432](https://github.com/SecureAuthCorp/impacket/pull/1432): Update httprelayclient.py to force NTLM auth if anonymous auth is enabled (ADCS)
 * [#1442](https://github.com/SecureAuthCorp/impacket/pull/1442): Adds relay to ICPR over RPC
-* [#1449](https://github.com/SecureAuthCorp/impacket/pull/1449): Allow weak TLS ciphers for LDAP connections
 * [#1458](https://github.com/SecureAuthCorp/impacket/pull/1458): SID Bruteforce through ntlmrelay over SMB
 * [#1462](https://github.com/SecureAuthCorp/impacket/pull/1462): Filter socks connections by Admin only
 * [#1470](https://github.com/SecureAuthCorp/impacket/pull/1470): [secretsdump] Fix -use-vss for use in all languages
+* [#1487](https://github.com/SecureAuthCorp/impacket/pull/1487): Use LDAP paged search in GetUserSPNs.py
 
 Impacket
 ========
