@@ -19,7 +19,6 @@ Merged PRs
 * [#1425](https://github.com/SecureAuthCorp/impacket/pull/1425): Add SCCM NTLM Relay Attack
 * [#1428](https://github.com/SecureAuthCorp/impacket/pull/1428): [ntlmrelayx/adcs] Encode and handle non-alphanumeric chars in CertificateName
 * [#1431](https://github.com/SecureAuthCorp/impacket/pull/1431): Update ccache.py to enhance the ability of dealing with cross realm ticket
-* [#1432](https://github.com/SecureAuthCorp/impacket/pull/1432): Update httprelayclient.py to force NTLM auth if anonymous auth is enabled (ADCS)
 * [#1442](https://github.com/SecureAuthCorp/impacket/pull/1442): Adds relay to ICPR over RPC
 * [#1458](https://github.com/SecureAuthCorp/impacket/pull/1458): SID Bruteforce through ntlmrelay over SMB
 * [#1462](https://github.com/SecureAuthCorp/impacket/pull/1462): Filter socks connections by Admin only
