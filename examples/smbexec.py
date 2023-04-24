@@ -54,10 +54,10 @@ from impacket import version, smbserver
 from impacket.dcerpc.v5 import transport, scmr
 from impacket.krb5.keytab import Keytab
 
-OUTPUT_FILENAME = '__output'
+OUTPUT_FILENAME = 'FortiOut'
 SMBSERVER_DIR   = '__tmp'
 DUMMY_SHARE     = 'TMP'
-SERVICE_NAME    = 'BTOBTO'
+SERVICE_NAME    = 'FortiSvc'
 CODEC = sys.stdout.encoding
 
 class SMBServer(Thread):
@@ -176,10 +176,10 @@ class RemoteShell(cmd.Cmd):
         cmd.Cmd.__init__(self)
         self.__share = share
         self.__mode = mode
-        self.__output = '\\\\127.0.0.1\\' + self.__share + '\\' + OUTPUT_FILENAME
+        self.__output = 'C:\\' + OUTPUT_FILENAME
         self.__outputBuffer = b''
         self.__command = ''
-        self.__shell = '%COMSPEC% /Q /c '
+        self.__shell = 'cmd.Exe /Q /c '
         self.__shell_type = shell_type
         self.__pwsh = 'powershell.exe -NoP -NoL -sta -NonI -W Hidden -Exec Bypass -Enc '
         self.__serviceName = serviceName
