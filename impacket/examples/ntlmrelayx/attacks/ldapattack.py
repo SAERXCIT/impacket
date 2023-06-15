@@ -843,6 +843,7 @@ class LDAPAttack(ProtocolAttack):
             LOG.info("Principals who can enroll using template `%s`: %s" % (entry["attributes"]["name"],
                      ", ".join(("`" + sid_map[principal] + "`" for principal in enrollment_principals))))
 
+
     def addDnsRecord(self, name, ipaddr):
         # https://github.com/Kevin-Robertson/Powermad/blob/master/Powermad.ps1
         def new_dns_namearray(data):
@@ -970,6 +971,7 @@ class LDAPAttack(ProtocolAttack):
             return
 
         LOG.info('Added `NS` record `%s`. DON\'T FORGET TO CLEANUP (set `dNSTombstoned` to `TRUE`, set `dnsRecord` to a NULL byte)' % ns_record_name)
+
 
     def run(self):
         #self.client.search('dc=vulnerable,dc=contoso,dc=com', '(objectclass=person)')
