@@ -70,13 +70,13 @@ class ADDCOMPUTER:
         if self.__targetIp is not None:
             self.__kdcHost = self.__targetIp
 
-        if self.__method not in ['SAMR', 'LDAPS']:
+        if self.__method not in ['SAMR', 'LDAPS', 'LDAP']:
             raise ValueError("Unsupported method %s" % self.__method)
 
         if self.__doKerberos and cmdLineOptions.dc_host is None:
             raise ValueError("Kerberos auth requires DNS name of the target DC. Use -dc-host.")
 
-        if self.__method == 'LDAPS' and not '.' in self.__domain:
+        if (self.__method == 'LDAPS' or self.__method == 'LDAP')  and not '.' in self.__domain:
                 logging.warning('\'%s\' doesn\'t look like a FQDN. Generating baseDN will probably fail.' % self.__domain)
 
         if cmdLineOptions.hashes is not None:
@@ -102,13 +102,15 @@ class ADDCOMPUTER:
         if self.__port is None:
             if self.__method == 'SAMR':
                 self.__port = 445
+            elif self.__method == 'LDAP':
+                self.__port = 389
             elif self.__method == 'LDAPS':
                 self.__port = 636
 
         if self.__domainNetbios is None:
             self.__domainNetbios = self.__domain
 
-        if self.__method == 'LDAPS' and self.__baseDN is None:
+        if (self.__method == 'LDAPS' or self.__method == 'LDAP') and self.__baseDN is None:
              # Create the baseDN
             domainParts = self.__domain.split('.')
             self.__baseDN = ''
@@ -117,7 +119,7 @@ class ADDCOMPUTER:
             # Remove last ','
             self.__baseDN = self.__baseDN[:-1]
 
-        if self.__method == 'LDAPS' and self.__computerGroup is None:
+        if (self.__method == 'LDAPS' or self.__method == 'LDAP') and self.__computerGroup is None:
             self.__computerGroup = 'CN=Computers,' + self.__baseDN
 
 
@@ -148,9 +150,14 @@ class ADDCOMPUTER:
             connectTo = self.__targetIp
         try:
             user = '%s\\%s' % (self.__domain, self.__username)
-            tls = ldap3.Tls(validate=ssl.CERT_NONE, version=ssl.PROTOCOL_TLSv1_2, ciphers='ALL:@SECLEVEL=0')
+            if self.__method == 'LDAPS':
+                tls = ldap3.Tls(validate=ssl.CERT_NONE, version=ssl.PROTOCOL_TLSv1_2, ciphers='ALL:@SECLEVEL=0')
+                use_ssl = True
+            else:
+                tls = None
+                use_ssl = False
             try:
-                ldapServer = ldap3.Server(connectTo, use_ssl=True, port=self.__port, get_info=ldap3.ALL, tls=tls)
+                ldapServer = ldap3.Server(connectTo, use_ssl=use_ssl, port=self.__port, get_info=ldap3.ALL, tls=tls)
                 if self.__doKerberos:
                     ldapConn = ldap3.Connection(ldapServer)
                     self.LDAP3KerberosLogin(ldapConn, self.__username, self.__password, self.__domain, self.__lmhash, self.__nthash,
@@ -177,7 +184,9 @@ class ADDCOMPUTER:
                     ldapConn = ldap3.Connection(ldapServer, user=user, password=self.__password, authentication=ldap3.NTLM)
                     ldapConn.bind()
 
-
+            if self.__method == 'LDAP':
+                logging.info("Starting TLS")
+                ldapConn.start_tls()
 
             if self.__noAdd or self.__delete:
                 if not self.LDAPComputerExists(ldapConn, self.__computerName):
@@ -528,7 +537,7 @@ class ADDCOMPUTER:
     def run(self):
         if self.__method == 'SAMR':
             self.run_samr()
-        elif self.__method == 'LDAPS':
+        elif self.__method == 'LDAPS' or self.__method == 'LDAP':
             self.run_ldaps()
 
 # Process command-line arguments.
@@ -551,7 +560,7 @@ if __name__ == '__main__':
     parser.add_argument('-no-add', action='store_true', help='Don\'t add a computer, only set password on existing one.')
     parser.add_argument('-delete', action='store_true', help='Delete an existing computer.')
     parser.add_argument('-debug', action='store_true', help='Turn DEBUG output ON')
-    parser.add_argument('-method', choices=['SAMR', 'LDAPS'], default='SAMR', help='Method of adding the computer.'
+    parser.add_argument('-method', choices=['SAMR', 'LDAPS', 'LDAP'], default='SAMR', help='Method of adding the computer.'
                                                                                 'SAMR works over SMB.'
                                                                                 'LDAPS has some certificate requirements'
                                                                                 'and isn\'t always available.')
