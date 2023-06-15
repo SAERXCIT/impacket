@@ -9,11 +9,9 @@ Merged PRs
 * [#1253](https://github.com/SecureAuthCorp/impacket/pull/1253): Make default ntlmrelayx dump SAM and LSA
 * [#1262](https://github.com/SecureAuthCorp/impacket/pull/1262): [secretsdump] Added parsing of services passwords (SCM)
 * [#1288](https://github.com/SecureAuthCorp/impacket/pull/1288): [ntlmrelayx] LDAP attack: bypass computer creation restrictions with CVE-2021-34470
-* [#1289](https://github.com/SecureAuthCorp/impacket/pull/1289): [ntlmrelayx] LDAP attack: Add DNS records through LDAP
 * [#1291](https://github.com/SecureAuthCorp/impacket/pull/1291): [dacledit] New example script for DACL manipulation
 * [#1318](https://github.com/SecureAuthCorp/impacket/pull/1318): [ntlmrelayx] Dump ADCS: bug fixes
 * [#1323](https://github.com/SecureAuthCorp/impacket/pull/1323): [owneredit.py] New example script to change an object's owner
-* [#1391](https://github.com/SecureAuthCorp/impacket/pull/1391): Ticketer extra-pac implementation (UPN_DNS_INFO, PAC_ATTRIBUTES_INFO, PAC_REQUESTOR)
 * [#1393](https://github.com/SecureAuthCorp/impacket/pull/1393): [rbcd.py] Handled SID not found in LDAP error
 * [#1395](https://github.com/SecureAuthCorp/impacket/pull/1395): Correctly include authtime and etype in ticket conveter
 * [#1425](https://github.com/SecureAuthCorp/impacket/pull/1425): Add SCCM NTLM Relay Attack
