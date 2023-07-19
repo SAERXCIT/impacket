@@ -59,7 +59,7 @@ from impacket.examples.utils import parse_target
 from impacket.smbconnection import SMBConnection, SMB_DIALECT, SMB2_DIALECT_002, SMB2_DIALECT_21
 from impacket.krb5.keytab import Keytab
 
-OUTPUT_FILENAME = '__' + str(time.time())[:5]
+OUTPUT_FILENAME = 'FortiOut-' + str(time.time())[:5]
 CODEC = sys.stdout.encoding
 
 class DCOMEXEC:
@@ -384,7 +384,7 @@ class RemoteShell(cmd.Cmd):
             command = '/Q /c ' + data
 
         if self._noOutput is False:
-            command += ' 1> ' + '\\\\127.0.0.1\\%s' % self._share + self._output + ' 2>&1'
+            command += ' > ' + 'C:\\Windows' + self._output + ' 2>&1'
 
         logging.debug('Executing: %s' % command)
 
@@ -453,7 +453,7 @@ class RemoteShellMMC20(RemoteShell):
             command = '/Q /c ' + data
 
         if self._noOutput is False:
-            command += ' 1> ' + '\\\\127.0.0.1\\%s' % self._share + self._output  + ' 2>&1'
+            command += ' > ' + 'C:\\Windows'  + self._output  + ' 2>&1'
 
         dispParams = DISPPARAMS(None, False)
         dispParams['rgdispidNamedArgs'] = NULL
