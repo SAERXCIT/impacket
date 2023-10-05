@@ -20,9 +20,9 @@ from subprocess import *
 PACKAGE_NAME = "impacket"
 
 VER_MAJOR = 0
-VER_MINOR = 11
+VER_MINOR = 12
 VER_MAINT = 0
-VER_PREREL = ""
+VER_PREREL = "dev1"
 try:
     if call(["git", "branch"], stderr=STDOUT, stdout=open(os.devnull, 'w')) == 0:
         p = Popen("git log -1 --format=%cd --date=format:%Y%m%d.%H%M%S", shell=True, stdin=PIPE, stderr=PIPE, stdout=PIPE)
@@ -51,7 +51,7 @@ def read(fname):
 
 setup(
     name=PACKAGE_NAME,
-    version="{}.{}.{}".format(VER_MAJOR, VER_MINOR, VER_MAINT),
+    version="{}.{}.{}.{}{}".format(VER_MAJOR, VER_MINOR, VER_MAINT,VER_PREREL,VER_LOCAL),
     description="Network protocols Constructors and Dissectors",
     url="https://www.coresecurity.com",
     author="SecureAuth Corporation",
@@ -68,8 +68,7 @@ setup(
     scripts=glob.glob(os.path.join('examples', '*.py')),
     data_files=data_files,
     install_requires=['pyasn1>=0.2.3', 'pycryptodomex', 'pyOpenSSL>=21.0.0', 'six', 'ldap3>=2.5,!=2.5.2,!=2.5.0,!=2.6',
-                      'ldapdomaindump>=0.9.0', 'flask>=1.0', 'future', 'charset_normalizer', 'dsinternals',
-                      'pyasn1-modules', 'requests-toolbelt'],
+                      'ldapdomaindump>=0.9.0', 'flask>=1.0', 'setuptools', 'charset_normalizer', 'dsinternals'],
     extras_require={'pyreadline:sys_platform=="win32"': [],
                     },
     classifiers=[
