@@ -112,7 +112,7 @@ class TSCH_EXEC:
         dce.connect()
         dce.set_auth_level(RPC_C_AUTHN_LEVEL_PKT_PRIVACY)
         dce.bind(tsch.MSRPC_UUID_TSCHS)
-        tmpName = ''.join([random.choice(string.ascii_letters) for _ in range(8)])
+        tmpName = ''.join([random.choice(string.ascii_letters) for _ in range(4)])
         tmpFileName = tmpName + '.tmp'
 
         if self.sessionId is not None:
@@ -123,9 +123,15 @@ class TSCH_EXEC:
 
         xml = """<?xml version="1.0" encoding="UTF-16"?>
 <Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <Actions Context="LocalSystem">
+    <Exec>
+      <Command>%s</Command>
+      <Arguments>%s</Arguments>
+    </Exec>
+  </Actions>
   <Triggers>
     <CalendarTrigger>
-      <StartBoundary>2015-07-15T20:35:13.2757294</StartBoundary>
+      <StartBoundary>2023-02-11T09:23:43.9274721</StartBoundary>
       <Enabled>true</Enabled>
       <ScheduleByDay>
         <DaysInterval>1</DaysInterval>
@@ -140,28 +146,22 @@ class TSCH_EXEC:
   </Principals>
   <Settings>
     <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
-    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
-    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
     <AllowHardTerminate>true</AllowHardTerminate>
+    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
     <RunOnlyIfNetworkAvailable>false</RunOnlyIfNetworkAvailable>
+    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
     <IdleSettings>
       <StopOnIdleEnd>true</StopOnIdleEnd>
       <RestartOnIdle>false</RestartOnIdle>
     </IdleSettings>
     <AllowStartOnDemand>true</AllowStartOnDemand>
     <Enabled>true</Enabled>
+    <ExecutionTimeLimit>P3D</ExecutionTimeLimit>
     <Hidden>true</Hidden>
     <RunOnlyIfIdle>false</RunOnlyIfIdle>
     <WakeToRun>false</WakeToRun>
-    <ExecutionTimeLimit>P3D</ExecutionTimeLimit>
     <Priority>7</Priority>
   </Settings>
-  <Actions Context="LocalSystem">
-    <Exec>
-      <Command>%s</Command>
-      <Arguments>%s</Arguments>
-    </Exec>
-  </Actions>
 </Task>
         """ % ((xml_escape(cmd) if self.__silentCommand is False else self.__command.split()[0]), 
             (xml_escape(args) if self.__silentCommand is False else " ".join(self.__command.split()[1:])))
