@@ -3,7 +3,6 @@ Merged PRs
 
 * [#1137](https://github.com/SecureAuthCorp/impacket/pull/1137): Add SystemDPAPIdump.py example
 * [#1161](https://github.com/SecureAuthCorp/impacket/pull/1161): Implement Kerberos authentication for HTTP
-* [#1201](https://github.com/SecureAuthCorp/impacket/pull/1201): New example script: ticket describer and decrypter
 * [#1202](https://github.com/SecureAuthCorp/impacket/pull/1202): Added `-self` and `-altservice` to getST for S4U2self abuse and service substitution
 * [#1224](https://github.com/SecureAuthCorp/impacket/pull/1224): Added renameMachine.py
 * [#1253](https://github.com/SecureAuthCorp/impacket/pull/1253): Make default ntlmrelayx dump SAM and LSA
