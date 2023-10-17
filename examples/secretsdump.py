@@ -112,6 +112,7 @@ class DumpSecrets:
         self.__resumeFileName = options.resumefile
         self.__canProcessSAMLSA = True
         self.__kdcHost = options.dc_ip
+        self.__dumpTdo = options.dump_tdo
         self.__options = options
 
         if options.hashes is not None:
@@ -287,7 +288,7 @@ class DumpSecrets:
                                                useVSSMethod=self.__useVSSMethod, justNTLM=self.__justDCNTLM,
                                                pwdLastSet=self.__pwdLastSet, resumeSession=self.__resumeFileName,
                                                outputFileName=self.__outputFileName, justUser=self.__justUser,
-                                               ldapFilter=self.__ldapFilter, printUserStatus=self.__printUserStatus)
+                                               ldapFilter=self.__ldapFilter, printUserStatus=self.__printUserStatus, dumpTdo=self.__dumpTdo)
                 try:
                     self.__NTDSHashes.dump()
                 except Exception as e:
@@ -377,6 +378,8 @@ if __name__ == '__main__':
                         help='base output filename. Extensions will be added for sam, secrets, cached and ntds')
     parser.add_argument('-use-vss', action='store_true', default=False,
                         help='Use the VSS method instead of default DRSUAPI')
+    parser.add_argument('-dump-tdo', action='store_true', default=False,
+                        help='Try to dump CLEAR trusts password (LOCAL NTDS only)')
     parser.add_argument('-rodcNo', action='store', type=int, help='Number of the RODC krbtgt account (only avaiable for Kerb-Key-List approach)')
     parser.add_argument('-rodcKey', action='store', help='AES key of the Read Only Domain Controller (only avaiable for Kerb-Key-List approach)')
     parser.add_argument('-use-keylist', action='store_true', default=False,
@@ -449,6 +452,11 @@ if __name__ == '__main__':
         else:
             # Having this switch on implies not asking for anything else.
             options.just_dc = True
+
+    if options.dump_tdo is True:
+        if remoteName.upper() != 'LOCAL':
+            logging.error('-dump-tdo not compatible with remote target')
+            sys.exit(1)
 
     if options.use_vss is True and options.resumefile is not None:
         logging.error('resuming a previous NTDS.DIT dump session is not supported in VSS mode')
