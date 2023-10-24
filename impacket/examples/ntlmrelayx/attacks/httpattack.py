@@ -18,6 +18,7 @@
 from impacket.examples.ntlmrelayx.attacks import ProtocolAttack
 from impacket.examples.ntlmrelayx.attacks.httpattacks.adcsattack import ADCSAttack
 from impacket.examples.ntlmrelayx.attacks.httpattacks.sccmattack import SCCMAttack
+from impacket.examples.ntlmrelayx.attacks.httpattacks.adminserviceattack import ADMINSERVICEAttack
 
 PROTOCOL_ATTACK_CLASS = "HTTPAttack"
 
@@ -37,6 +38,8 @@ class HTTPAttack(ProtocolAttack, ADCSAttack, SCCMAttack):
             ADCSAttack._run(self)
         elif self.config.isSCCMAttack:
             SCCMAttack._run(self)
+        elif self.config.isADMINAttack:
+            ADMINSERVICEAttack._run(self)
         else:
             # Default action: Dump requested page to file, named username-targetname.html
             # You can also request any page on the server via self.client.session,

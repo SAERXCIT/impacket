@@ -108,6 +108,12 @@ class NTLMRelayxConfig:
         self.sccm_fqdn = None
         self.sccm_server = None
         self._sccm_sleep = 5
+        # Admin service attack
+        self.isADMINAttack = False
+        self.sccmAdminToken = None # internal storage var; not a CLI flag option
+        self.logonname = None
+        self.displayname = None
+        self.objectsid = None
 
     def setSMBChallenge(self, value):
         self.SMBServerChallenge = value
@@ -262,6 +268,14 @@ class NTLMRelayxConfig:
         self.sccm_fqdn = fqdn
         self.sccm_server = server
         self.sccm_sleep = sleep_time
+    def setisADMINAttack(self, isADMINAttack, logonname, displayname, objectsid):
+        self.isADMINAttack = isADMINAttack
+        self.logonname = logonname
+        self.displayname = displayname
+        self.objectsid = objectsid
+
+    def setSCCMAdminToken(self, token):
+        self.sccmAdminToken = token
 
 def parse_listening_ports(value):
     ports = set()

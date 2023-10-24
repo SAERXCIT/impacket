@@ -246,6 +246,7 @@ def start_servers(options, threads):
         c.setIsSCCMAttack(options.sccm)
         c.setSCCMOptions(options.sccm_device, options.sccm_fqdn, 
                             options.sccm_server, options.sccm_sleep)
+        c.setisADMINAttack(options.adminservice, options.logonname, options.displayname, options.objectsid)
 
         #If the redirect option is set, configure the HTTP server to redirect targets to SMB
         if server is HTTPRelayServer and options.r is not None:
@@ -442,6 +443,12 @@ if __name__ == '__main__':
     sccmoptions.add_argument('--sccm-fqdn', action='store', metavar="FQDN", required=False, help='Fully qualified domain name of the target domain')
     sccmoptions.add_argument('--sccm-server', action='store', metavar="HOSTNAME", required=False, help='Hostname of the target SCCM server')
     sccmoptions.add_argument('--sccm-sleep', action='store', metavar="SECONDS", type=int, default=5, required=False, help='Sleep time before requesting policy')
+    # Adminservice opions
+    adminoptions = parser.add_argument_group("SCCM AdminService attack options")
+    adminoptions.add_argument('--adminservice', action='store_true', required=False, help="Enable SCCM AdminService relay attack")
+    adminoptions.add_argument('--logonname', action='store', required=False, help="Logon name of the account to be added as an admin")
+    adminoptions.add_argument('--displayname', action='store', required=False, help="Display name name of the account to be added as an admin")
+    adminoptions.add_argument('--objectsid', action='store', required=False, help="SID of the account to be added as an admin")
 
     try:
        options = parser.parse_args()
