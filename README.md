@@ -20,6 +20,14 @@ Merged PRs
 * [#1458](https://github.com/SecureAuthCorp/impacket/pull/1458): SID Bruteforce through ntlmrelay over SMB
 * [#1462](https://github.com/SecureAuthCorp/impacket/pull/1462): Filter socks connections by Admin only
 * [#1470](https://github.com/SecureAuthCorp/impacket/pull/1470): [secretsdump] Fix -use-vss for use in all languages
+* [#1495](https://github.com/SecureAuthCorp/impacket/pull/1495): Fixing Kerberos Name Type in AS requests
+* [#1477](https://github.com/SecureAuthCorp/impacket/pull/1477): Fix HKEY_CURRENT_USER and add HKEY_USERS
+* [#1556](https://github.com/SecureAuthCorp/impacket/pull/1556): Implement MS-GKDI and LAPSv2 password extraction
+* [#1585](https://github.com/SecureAuthCorp/impacket/pull/1585): Added ability to set the RENEW ticket option to renew a TGT
+* [#1593](https://github.com/SecureAuthCorp/impacket/pull/1593): Feature/relay sccm adminservice
+* [#1628](https://github.com/SecureAuthCorp/impacket/pull/1628): Patches secretsdump unable to compute Kerberos salt to retrieve AESkeys via Kerberos authentication
+* [#1629](https://github.com/SecureAuthCorp/impacket/pull/1629): fix endless loop in FIND_NEXT2
+* [#1636](https://github.com/SecureAuthCorp/impacket/pull/1636): ntlmrelayx.py: Make SOCKS5 address and port configurable
 
 Impacket
 ========
