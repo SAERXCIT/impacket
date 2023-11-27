@@ -13,7 +13,6 @@
 #   the -impersonate switch to request the ticket on behalf other user (it will use S4U2Self/S4U2Proxy to
 #   request the ticket.)
 #
-#   Similar feature has been implemented already by Benjamin Delpy (@gentilkiwi) in Kekeo (s4u)
 #
 #   Examples:
 #       ./getST.py -hashes lm:nt -spn cifs/contoso-dc contoso.com/user

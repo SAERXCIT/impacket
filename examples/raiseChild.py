@@ -11,7 +11,6 @@
 #   This script implements a child-domain to forest privilege escalation
 #   as detailed by Sean Metcalf (@PyroTek3) at https://adsecurity.org/?p=1640. We will
 #   be (ab)using the concept of Golden Tickets and ExtraSids researched and implemented
-#   by Benjamin Delpy (@gentilkiwi) in mimikatz (https://github.com/gentilkiwi/mimikatz).
 #   The idea of automating all these tasks came from @mubix.
 #
 #   The workflow is as follows:

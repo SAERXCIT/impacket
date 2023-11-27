@@ -35,7 +35,6 @@
 #   Most of the work done by these guys. I just put all
 #   the pieces together, plus some extra magic.
 #
-#   - https://github.com/gentilkiwi/kekeo/tree/master/dcsync
 #   - https://moyix.blogspot.com.ar/2008/02/syskey-and-sam.html
 #   - https://moyix.blogspot.com.ar/2008/02/decrypting-lsa-secrets.html
 #   - https://moyix.blogspot.com.ar/2008/02/cached-domain-credentials.html

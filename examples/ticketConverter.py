@@ -8,7 +8,6 @@
 # for more information.
 #
 # Description:
-#   This script will convert kirbi files (commonly used by mimikatz) into ccache files used by impacket,
 #   and vice versa.
 #
 #   Examples:
@@ -21,7 +20,6 @@
 # References:
 #   - https://tools.ietf.org/html/rfc4120
 #   - http://web.mit.edu/KERBEROS/krb5-devel/doc/formats/ccache_file_format.html
-#   - https://github.com/gentilkiwi/kekeo
 #   - https://github.com/rvazarkar/KrbCredExport
 #
 

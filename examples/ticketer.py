@@ -33,10 +33,6 @@
 #   Alberto Solino (@agsolino)
 #
 # References:
-#   - Original presentation at BlackHat USA 2014 by @gentilkiwi and @passingthehash:
-#     (https://www.slideshare.net/gentilkiwi/abusing-microsoft-kerberos-sorry-you-guys-dont-get-it)
-#   - Original implementation by Benjamin Delpy (@gentilkiwi) in mimikatz
-#     (https://github.com/gentilkiwi/mimikatz)
 #
 # ToDo:
 #   [X] Silver tickets still not implemented - DONE by @machosec and fixes by @br4nsh

@@ -33,7 +33,6 @@
 # References:
 #   Most of the work done by these guys. I just put all
 #   the pieces together, plus some extra magic.
-#   - https://github.com/gentilkiwi/kekeo/tree/master/dcsync
 #   - https://moyix.blogspot.com.ar/2008/02/syskey-and-sam.html
 #   - https://moyix.blogspot.com.ar/2008/02/decrypting-lsa-secrets.html
 #   - https://moyix.blogspot.com.ar/2008/02/cached-domain-credentials.html
@@ -124,7 +123,6 @@ class SAM_KEY_DATA(Structure):
         ('Reserved','<Q=0'),
     )
 
-# Structure taken from mimikatz (@gentilkiwi) in the context of https://github.com/fortra/impacket/issues/326
 # Merci! Makes it way easier than parsing manually.
 class SAM_HASH(Structure):
     structure = (
@@ -232,7 +230,6 @@ class NL_RECORD(Structure):
         ('DomainNameLength','<H=0'),
         ('EffectiveNameLength','<H=0'),
         ('FullNameLength','<H=0'),
-# Taken from https://github.com/gentilkiwi/mimikatz/blob/master/mimikatz/modules/kuhl_m_lsadump.h#L265
         ('LogonScriptName','<H=0'),
         ('ProfilePathLength','<H=0'),
         ('HomeDirectoryLength','<H=0'),

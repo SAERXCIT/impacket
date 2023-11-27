@@ -142,7 +142,7 @@ class SCCMAttack:
                 f.write(self.key.private_bytes(
                     encoding=serialization.Encoding.PEM, 
                     format=serialization.PrivateFormat.TraditionalOpenSSL, 
-                    encryption_algorithm=serialization.BestAvailableEncryption(b"mimikatz"),
+                    encryption_algorithm=serialization.BestAvailableEncryption(b"password"),
                 ))
 
             with open("/tmp/certificate.pem", "wb") as f:
