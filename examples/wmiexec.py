@@ -43,7 +43,7 @@ from impacket.dcerpc.v5.dtypes import NULL
 from impacket.krb5.keytab import Keytab
 from six import PY2
 
-OUTPUT_FILENAME = str(time.time())
+OUTPUT_FILENAME = b64encode(bytearray(str(time.time()), encoding="utf8")).decode('utf8')
 CODEC = sys.stdout.encoding
 
 
