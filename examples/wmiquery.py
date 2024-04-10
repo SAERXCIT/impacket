@@ -51,8 +51,19 @@ if __name__ == '__main__':
      lcd {path}                 - changes the current local directory to {path}
      exit                       - terminates the server process (and this session)
      describe {class}           - describes class
+     createvss                  - creates a vss for C:\\ drive
      ! {cmd}                    - executes a local shell cmd
      """) 
+
+        def do_createvss(self, line):
+            try:
+                win32ShadowCopy, _ = self.iWbemServices.GetObject('Win32_ShadowCopy')
+                resp = win32ShadowCopy.Create("C:\\", 'ClientAccessible')
+                print('Shadow copy created with ID %s' % resp.ShadowID)
+                win32ShadowCopy.RemRelease()
+            except Exception:
+                print('Exception', exc_info=True)
+                raise
 
         def do_shell(self, s):
             os.system(s)

@@ -117,13 +117,6 @@ class SMBAttack(ProtocolAttack):
             from impacket.examples.secretsdump import RemoteOperations, SAMHashes, LSASecrets
             from impacket.examples.ntlmrelayx.utils.enum import EnumLocalAdmins
             samHashes = None
-            try:
-                # We have to add some flags just in case the original client did not
-                # Why? needed for avoiding INVALID_PARAMETER
-                if  self.__SMBConnection.getDialect() == smb.SMB_DIALECT:
-                    flags1, flags2 = self.__SMBConnection.getSMBServer().get_flags()
-                    flags2 |= smb.SMB.FLAGS2_LONG_NAMES
-                    self.__SMBConnection.getSMBServer().set_flags(flags2=flags2)
 
             if (self.config.addComputerSMB is not None):
                 from impacket.examples.secretsdump import RemoteOperations
