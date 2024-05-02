@@ -51,15 +51,22 @@ if __name__ == '__main__':
      lcd {path}                 - changes the current local directory to {path}
      exit                       - terminates the server process (and this session)
      describe {class}           - describes class
-     createvss                  - creates a vss for C:\\ drive
+     createvss {drive}          - creates a vss for drive (C by default)
      ! {cmd}                    - executes a local shell cmd
      """) 
 
         def do_createvss(self, line):
+            line = line.strip('\n')
+            if not line:
+                line = 'C'
+            if line[-1:] == '\\':
+                line = line[:-1]
+            if line[-1:] == ':':
+                line = line[:-1]
             try:
                 win32ShadowCopy, _ = self.iWbemServices.GetObject('Win32_ShadowCopy')
-                resp = win32ShadowCopy.Create("C:\\", 'ClientAccessible')
-                print('Shadow copy created with ID %s' % resp.ShadowID)
+                resp = win32ShadowCopy.Create(f"{line}:\\", 'ClientAccessible')
+                print('Shadow copy created for drive %s with ID %s' % (line, resp.ShadowID))
                 win32ShadowCopy.RemRelease()
             except Exception:
                 print('Exception', exc_info=True)
