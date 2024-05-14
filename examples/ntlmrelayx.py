@@ -267,7 +267,7 @@ def start_servers(options, threads):
                 s = server(c)
                 s.start()
                 threads.add(s)
-                sleep(0.1)
+                sleep(0.5)
             continue
 
         elif server is SMBRelayServer:
