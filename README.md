@@ -25,6 +25,7 @@ Merged PRs
 * [#1593](https://github.com/SecureAuthCorp/impacket/pull/1593): Feature/relay sccm adminservice
 * [#1628](https://github.com/SecureAuthCorp/impacket/pull/1628): Patches secretsdump unable to compute Kerberos salt to retrieve AESkeys via Kerberos authentication
 * [#1629](https://github.com/SecureAuthCorp/impacket/pull/1629): fix endless loop in FIND_NEXT2
+* [#1759](https://github.com/SecureAuthCorp/impacket/pull/1759): [secretsdump] Filter foreign users when parsing NTDS.dit
 
 Impacket
 ========

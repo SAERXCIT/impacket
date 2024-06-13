@@ -2001,10 +2001,10 @@ class NTDSHashes:
         'supplementalCredentials':b'ATTk589949',
         'pwdLastSet':b'ATTq589920',
 
-
         'trustAuthIncoming':b'ATTk589953',
         'trustAuthOutgoing':b'ATTk589959',
-        'trustPartner':b'ATTm589957'
+        'trustPartner':b'ATTm589957',
+        'instanceType':b'ATTj131073',
     }
 
     NAME_TO_ATTRTYP = {
@@ -2145,6 +2145,7 @@ class NTDSHashes:
             self.NAME_TO_INTERNAL['userAccountControl'] : 1,
             self.NAME_TO_INTERNAL['supplementalCredentials'] : 1,
             self.NAME_TO_INTERNAL['pekList'] : 1,
+            self.NAME_TO_INTERNAL['instanceType'] : 1,
 
             self.NAME_TO_INTERNAL['trustAuthIncoming'] : 1,
             self.NAME_TO_INTERNAL['trustAuthOutgoing'] : 1,
@@ -2169,7 +2170,7 @@ class NTDSHashes:
             elif record[self.NAME_TO_INTERNAL['pekList']] is not None:
                 peklist =  unhexlify(record[self.NAME_TO_INTERNAL['pekList']])
                 break
-            elif record[self.NAME_TO_INTERNAL['sAMAccountType']] in self.ACCOUNT_TYPES:
+            elif record[self.NAME_TO_INTERNAL['sAMAccountType']] in self.ACCOUNT_TYPES and record[self.NAME_TO_INTERNAL['instanceType']] & 4:    # "The object is writable on this directory":
                 # Okey.. we found some users, but we're not yet ready to process them.
                 # Let's just store them in a temp list
                 self.__tmpUsers.append(record)
@@ -2772,8 +2773,7 @@ class NTDSHashes:
                         if record is None:
                             break
                         try:
-                            pass
-                            if record[self.NAME_TO_INTERNAL['sAMAccountType']] in self.ACCOUNT_TYPES:
+                            if record[self.NAME_TO_INTERNAL['sAMAccountType']] in self.ACCOUNT_TYPES and record[self.NAME_TO_INTERNAL['instanceType']] & 4:    # "The object is writable on this directory"
                                 self.__decryptHash(record, outputFile=hashesOutputFile)
                                 if self.__justNTLM is False:
                                     self.__decryptSupplementalInfo(record, None, keysOutputFile, clearTextOutputFile)
