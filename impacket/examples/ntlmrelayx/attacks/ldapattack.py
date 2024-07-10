@@ -1186,12 +1186,10 @@ class LDAPAttack(ProtocolAttack):
         # Perform the Delegate attack if it is enabled and we relayed a computer account
         if self.config.delegateaccess and self.username[-1] == '$':
             self.delegateAttack(self.config.escalateuser, self.username, domainDumper, self.config.sid)
-            return
         
         # Perform the Shadow Credentials attack if it is enabled
         if self.config.IsShadowCredentialsAttack:
             self.shadowCredentialsAttack(domainDumper)
-            return
 
         # Last attack, dump the domain if no special privileges are present
         if not dumpedDomain and self.config.dumpdomain:
