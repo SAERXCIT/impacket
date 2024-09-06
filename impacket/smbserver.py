@@ -2703,7 +2703,7 @@ class SMBCommands:
                 resp['Flags2'] = smb.SMB.FLAGS2_EXTENDED_SECURITY | smb.SMB.FLAGS2_NT_STATUS | smb.SMB.FLAGS2_UNICODE
                 # resp['Flags2'] = smb.SMB.FLAGS2_EXTENDED_SECURITY | smb.SMB.FLAGS2_NT_STATUS
                 _dialects_data = smb.SMBExtended_Security_Data()
-                _dialects_data['ServerGUID'] = b'A' * 16
+                _dialects_data['ServerGUID'] = smbServer.getGuid()
                 blob = SPNEGO_NegTokenInit()
                 blob['MechTypes'] = [TypesMech['NTLMSSP - Microsoft NTLM Security Support Provider']]
                 _dialects_data['SecurityBlob'] = blob.getData()
@@ -2813,7 +2813,7 @@ class SMB2Commands:
                 raise Exception('SMB2 not supported, fallbacking')
         else:
             respSMBCommand['DialectRevision'] = smb2.SMB2_DIALECT_002
-        respSMBCommand['ServerGuid'] = b'A' * 16
+        respSMBCommand['ServerGuid'] = smbServer.getGuid()
         respSMBCommand['Capabilities'] = 0
         respSMBCommand['MaxTransactSize'] = 65536
         respSMBCommand['MaxReadSize'] = 65536
@@ -3913,7 +3913,7 @@ class Ioctls:
         validateNegotiateInfo = smb2.VALIDATE_NEGOTIATE_INFO(ioctlRequest['Buffer'])
         validateNegotiateInfoResponse = smb2.VALIDATE_NEGOTIATE_INFO_RESPONSE()
         validateNegotiateInfoResponse['Capabilities'] = 0
-        validateNegotiateInfoResponse['Guid'] = b'A' * 16
+        validateNegotiateInfoResponse['Guid'] = smbServer.getGuid()
         validateNegotiateInfoResponse['SecurityMode'] = 1
         validateNegotiateInfoResponse['Dialect'] = smb2.SMB2_DIALECT_002
 
@@ -3993,6 +3993,7 @@ class SMBSERVER(socketserver.ThreadingMixIn, socketserver.TCPServer):
         self.__serverDomain = ''
         self.__challenge = ''
         self.__log = None
+        self.__guid = random.randbytes(16)
 
         # Our ConfigParser data
         self.__serverConfig = config_parser
@@ -4125,6 +4126,9 @@ class SMBSERVER(socketserver.ThreadingMixIn, socketserver.TCPServer):
 
     def getCredentials(self):
         return self.__credentials
+
+    def getGuid(self):
+        return self.__guid
 
     def removeConnection(self, name):
         try:

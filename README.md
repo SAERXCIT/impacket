@@ -9,8 +9,6 @@ Merged PRs
 * [#1262](https://github.com/SecureAuthCorp/impacket/pull/1262): [secretsdump] Added parsing of services passwords (SCM)
 * [#1288](https://github.com/SecureAuthCorp/impacket/pull/1288): [ntlmrelayx] LDAP attack: bypass computer creation restrictions with CVE-2021-34470
 * [#1318](https://github.com/SecureAuthCorp/impacket/pull/1318): [ntlmrelayx] Dump ADCS: bug fixes
-* [#1323](https://github.com/SecureAuthCorp/impacket/pull/1323): [owneredit.py] New example script to change an object's owner
-* [#1393](https://github.com/SecureAuthCorp/impacket/pull/1393): [rbcd.py] Handled SID not found in LDAP error
 * [#1395](https://github.com/SecureAuthCorp/impacket/pull/1395): Correctly include authtime and etype in ticket conveter
 * [#1425](https://github.com/SecureAuthCorp/impacket/pull/1425): Add SCCM NTLM Relay Attack
 * [#1428](https://github.com/SecureAuthCorp/impacket/pull/1428): [ntlmrelayx/adcs] Encode and handle non-alphanumeric chars in CertificateName
@@ -24,7 +22,6 @@ Merged PRs
 * [#1585](https://github.com/SecureAuthCorp/impacket/pull/1585): Added ability to set the RENEW ticket option to renew a TGT
 * [#1593](https://github.com/SecureAuthCorp/impacket/pull/1593): Feature/relay sccm adminservice
 * [#1628](https://github.com/SecureAuthCorp/impacket/pull/1628): Patches secretsdump unable to compute Kerberos salt to retrieve AESkeys via Kerberos authentication
-* [#1629](https://github.com/SecureAuthCorp/impacket/pull/1629): fix endless loop in FIND_NEXT2
 * [#1759](https://github.com/SecureAuthCorp/impacket/pull/1759): [secretsdump] Filter foreign users when parsing NTDS.dit
 
 Impacket
