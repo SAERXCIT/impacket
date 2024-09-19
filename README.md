@@ -21,6 +21,10 @@ Merged PRs
 * [#1593](https://github.com/SecureAuthCorp/impacket/pull/1593): Feature/relay sccm adminservice
 * [#1628](https://github.com/SecureAuthCorp/impacket/pull/1628): Patches secretsdump unable to compute Kerberos salt to retrieve AESkeys via Kerberos authentication
 * [#1759](https://github.com/SecureAuthCorp/impacket/pull/1759): [secretsdump] Filter foreign users when parsing NTDS.dit
+* [#1801](https://github.com/SecureAuthCorp/impacket/pull/1801): feat in net.py: add functionality to enable and disable user accounts
+* [#1809](https://github.com/SecureAuthCorp/impacket/pull/1809): Add clear_keycredentiallinks to ldap_shell
+* [#1813](https://github.com/SecureAuthCorp/impacket/pull/1813): bugfix in SEALKEY()
+* [#1814](https://github.com/SecureAuthCorp/impacket/pull/1814): Display created ProcessId using wmiexec.py
 
 Impacket
 ========
