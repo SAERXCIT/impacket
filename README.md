@@ -9,6 +9,7 @@ Merged PRs
 * [#1262](https://github.com/SecureAuthCorp/impacket/pull/1262): [secretsdump] Added parsing of services passwords (SCM)
 * [#1288](https://github.com/SecureAuthCorp/impacket/pull/1288): [ntlmrelayx] LDAP attack: bypass computer creation restrictions with CVE-2021-34470
 * [#1395](https://github.com/SecureAuthCorp/impacket/pull/1395): Correctly include authtime and etype in ticket conveter
+* [#1402](https://github.com/SecureAuthCorp/impacket/pull/1402): Add Shadow Credentials Commands to Ntlmrelayx's Interactive LDAP Shell
 * [#1425](https://github.com/SecureAuthCorp/impacket/pull/1425): Add SCCM NTLM Relay Attack
 * [#1428](https://github.com/SecureAuthCorp/impacket/pull/1428): [ntlmrelayx/adcs] Encode and handle non-alphanumeric chars in CertificateName
 * [#1431](https://github.com/SecureAuthCorp/impacket/pull/1431): Update ccache.py to enhance the ability of dealing with cross realm ticket
