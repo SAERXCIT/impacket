@@ -26,6 +26,9 @@ Merged PRs
 * [#1809](https://github.com/SecureAuthCorp/impacket/pull/1809): Add clear_keycredentiallinks to ldap_shell
 * [#1813](https://github.com/SecureAuthCorp/impacket/pull/1813): bugfix in SEALKEY()
 * [#1814](https://github.com/SecureAuthCorp/impacket/pull/1814): Display created ProcessId using wmiexec.py
+* [#1825](https://github.com/SecureAuthCorp/impacket/pull/1825): Add support for LDAP and LDAPS protocols in ntlmrelayx SOCKS
+* [#1826](https://github.com/SecureAuthCorp/impacket/pull/1826): Add NTLM SIGN flag for SMB Server
+* [#1831](https://github.com/SecureAuthCorp/impacket/pull/1831): SMB Server fix filename offsets
 
 Impacket
 ========
