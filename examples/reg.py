@@ -192,7 +192,7 @@ class RegHandler:
             elif self.__action == 'SAVE':
                 self.save(dce, self.__options.keyName)
             elif self.__action == 'BACKUP':
-                for hive in [r"HKLM\SAM", r"HKLM\SYSTEM", r"HKLM\SECURITY"]:
+                for hive in ["HKLM\\SAM", "HKLM\\SYSTEM", "HKLM\\SECURITY"]:
                     self.save(dce, hive)
             else:
                 logging.error('Method %s not implemented yet!' % self.__action)
@@ -217,7 +217,7 @@ class RegHandler:
 
     def save(self, dce, keyName):
         hRootKey, subKey = self.__strip_root_key(dce, keyName)
-        outputFileName = r"%s\%s.save" % (self.__options.outputPath, subKey)
+        outputFileName = "%s\\%s.save" % (self.__options.outputPath, subKey)
         logging.debug("Dumping %s, be patient it can take a while for large hives (e.g. HKLM\\SYSTEM)" % keyName)
         try:
             ans2 = rrp.hBaseRegOpenKey(dce, hRootKey, subKey, dwOptions=rrp.REG_OPTION_BACKUP_RESTORE | rrp.REG_OPTION_OPEN_LINK, samDesired=rrp.KEY_READ)
