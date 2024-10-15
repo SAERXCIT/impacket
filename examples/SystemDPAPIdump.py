@@ -196,6 +196,9 @@ class DumpCreds:
                         if f.is_directory() == 0:
                             filename = f.get_longname()
                             logging.info("Credential file found: " + filename)
+                            if filename.upper() == "DFBE70A7E5CC19A398EBF1B96859CE5D":
+                                logging.info("Skipping default Windows Live credential file DFBE70A7E5CC19A398EBF1B96859CE5D...")
+                                continue
                             logging.info("Retrieving credential file: " + filename)
                             data = self.getFileContent(share, cred_path, filename)
                             if data:
