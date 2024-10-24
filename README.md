@@ -30,6 +30,7 @@ Merged PRs
 * [#1825](https://github.com/SecureAuthCorp/impacket/pull/1825): Add support for LDAP and LDAPS protocols in ntlmrelayx SOCKS
 * [#1826](https://github.com/SecureAuthCorp/impacket/pull/1826): Add NTLM SIGN flag for SMB Server
 * [#1831](https://github.com/SecureAuthCorp/impacket/pull/1831): SMB Server fix filename offsets
+* [#1840](https://github.com/SecureAuthCorp/impacket/pull/1840): Add parsing for 'Export' hives and boot key computation from class names
 
 Impacket
 ========
