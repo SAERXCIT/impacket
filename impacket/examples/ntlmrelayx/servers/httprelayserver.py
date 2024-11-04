@@ -579,6 +579,7 @@ class HTTPRelayServer(Thread):
         LOG.info("Setting up HTTP Server on port %s" % self.config.listeningPort)
 
         # changed to read from the interfaceIP set in the configuration
+        self.HTTPServer.allow_reuse_address = True
         self.server = self.HTTPServer((self.config.interfaceIp, self.config.listeningPort), self.HTTPHandler, self.config)
 
         try:

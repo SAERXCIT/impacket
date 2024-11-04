@@ -1880,7 +1880,14 @@ class LSASecrets(OfflineRegistry):
                 valueTypeList.append('OldVal')
 
             for valueType in valueTypeList:
-                value = self.getValue('\\Policy\\Secrets\\{}\\{}\\default'.format(key,valueType))
+                valueKey = '\\Policy\\Secrets\\{}\\{}\\default'.format(key,valueType)
+
+                try:
+                    value = self.getValue(valueKey)
+                except ValueError as e:
+                    LOG.error('Cannot get value of key %s: %s' % (valueKey, e))
+                    continue
+
                 if value is not None and value[1] != 0:
                     if self.__vistaStyle is True:
                         record = LSA_SECRET(value[1])
