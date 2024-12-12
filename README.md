@@ -30,7 +30,11 @@ Merged PRs
 * [#1825](https://github.com/SecureAuthCorp/impacket/pull/1825): Add support for LDAP and LDAPS protocols in ntlmrelayx SOCKS
 * [#1826](https://github.com/SecureAuthCorp/impacket/pull/1826): Add NTLM SIGN flag for SMB Server
 * [#1831](https://github.com/SecureAuthCorp/impacket/pull/1831): SMB Server fix filename offsets
+* [#1833](https://github.com/SecureAuthCorp/impacket/pull/1833): ntlmrelayx: support upn format + oem encoding
+* [#1834](https://github.com/SecureAuthCorp/impacket/pull/1834): Fix SMB2 compoud response signing
+* [#1835](https://github.com/SecureAuthCorp/impacket/pull/1835): Add SMB2 attribute tag and fix SMB2 query results
 * [#1840](https://github.com/SecureAuthCorp/impacket/pull/1840): Add parsing for 'Export' hives and boot key computation from class names
+* [#1847](https://github.com/SecureAuthCorp/impacket/pull/1847): Added user-status functionality to the SAMHashes Class of the secrestdump.py
 
 Impacket
 ========
