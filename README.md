@@ -21,18 +21,13 @@ Merged PRs
 * [#1477](https://github.com/SecureAuthCorp/impacket/pull/1477): Fix HKEY_CURRENT_USER and add HKEY_USERS
 * [#1593](https://github.com/SecureAuthCorp/impacket/pull/1593): Feature/relay sccm adminservice
 * [#1628](https://github.com/SecureAuthCorp/impacket/pull/1628): Patches secretsdump unable to compute Kerberos salt to retrieve AESkeys via Kerberos authentication
-* [#1695](https://github.com/SecureAuthCorp/impacket/pull/1695): Fixed warnings with Python 3.12
 * [#1759](https://github.com/SecureAuthCorp/impacket/pull/1759): [secretsdump] Filter foreign users when parsing NTDS.dit
-* [#1801](https://github.com/SecureAuthCorp/impacket/pull/1801): feat in net.py: add functionality to enable and disable user accounts
 * [#1809](https://github.com/SecureAuthCorp/impacket/pull/1809): Add clear_keycredentiallinks to ldap_shell
 * [#1813](https://github.com/SecureAuthCorp/impacket/pull/1813): bugfix in SEALKEY()
 * [#1814](https://github.com/SecureAuthCorp/impacket/pull/1814): Display created ProcessId using wmiexec.py
-* [#1825](https://github.com/SecureAuthCorp/impacket/pull/1825): Add support for LDAP and LDAPS protocols in ntlmrelayx SOCKS
 * [#1826](https://github.com/SecureAuthCorp/impacket/pull/1826): Add NTLM SIGN flag for SMB Server
-* [#1831](https://github.com/SecureAuthCorp/impacket/pull/1831): SMB Server fix filename offsets
 * [#1833](https://github.com/SecureAuthCorp/impacket/pull/1833): ntlmrelayx: support upn format + oem encoding
 * [#1834](https://github.com/SecureAuthCorp/impacket/pull/1834): Fix SMB2 compoud response signing
-* [#1835](https://github.com/SecureAuthCorp/impacket/pull/1835): Add SMB2 attribute tag and fix SMB2 query results
 * [#1840](https://github.com/SecureAuthCorp/impacket/pull/1840): Add parsing for 'Export' hives and boot key computation from class names
 * [#1847](https://github.com/SecureAuthCorp/impacket/pull/1847): Added user-status functionality to the SAMHashes Class of the secrestdump.py
 * [#1848](https://github.com/SecureAuthCorp/impacket/pull/1848): Fix netlogon implementation
