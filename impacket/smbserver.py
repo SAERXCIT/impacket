@@ -1771,7 +1771,7 @@ class SMBCommands:
                 smbServer.log("Path not in current working directory", logging.ERROR)
                 errorCode = STATUS_OBJECT_PATH_SYNTAX_BAD
 
-            if os.path.exists(pathName) is not True:
+            elif not os.path.exists(pathName):
                 errorCode = STATUS_NO_SUCH_FILE
 
             else:
@@ -4643,9 +4643,8 @@ class SMBSERVER(socketserver.ThreadingMixIn, socketserver.TCPServer):
             finalData = []
             totalPackets = len(packetsToSend)
             for idx, packet in enumerate(packetsToSend):
-                padLen = 0
+                padLen = -len(packet) % 8
                 if idx + 1 < totalPackets:
-                    padLen = -len(packet) % 8
                     packet['NextCommand'] = len(packet) + padLen
 
                 if connData['SignatureEnabled']:
