@@ -25,13 +25,10 @@ Merged PRs
 * [#1809](https://github.com/SecureAuthCorp/impacket/pull/1809): Add clear_keycredentiallinks to ldap_shell
 * [#1813](https://github.com/SecureAuthCorp/impacket/pull/1813): bugfix in SEALKEY()
 * [#1814](https://github.com/SecureAuthCorp/impacket/pull/1814): Display created ProcessId using wmiexec.py
-* [#1826](https://github.com/SecureAuthCorp/impacket/pull/1826): Add NTLM SIGN flag for SMB Server
-* [#1833](https://github.com/SecureAuthCorp/impacket/pull/1833): ntlmrelayx: support upn format + oem encoding
-* [#1834](https://github.com/SecureAuthCorp/impacket/pull/1834): Fix SMB2 compoud response signing
 * [#1840](https://github.com/SecureAuthCorp/impacket/pull/1840): Add parsing for 'Export' hives and boot key computation from class names
 * [#1847](https://github.com/SecureAuthCorp/impacket/pull/1847): Added user-status functionality to the SAMHashes Class of the secrestdump.py
 * [#1848](https://github.com/SecureAuthCorp/impacket/pull/1848): Fix netlogon implementation
-* [#1859](https://github.com/SecureAuthCorp/impacket/pull/1859): Fix file length not matching file name because of multi-byte UTF-16
+* [#1875](https://github.com/SecureAuthCorp/impacket/pull/1875): add SAN with UPN by default when doing shadow credentials
 
 Impacket
 ========
