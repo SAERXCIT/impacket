@@ -71,7 +71,7 @@ def get_machine_name(args, domain):
             raise Exception('Error while anonymous logging into %s' % domain)
     else:
         s.logoff()
-    return s.getServerName()
+    return s.getServerDNSHostName()
 
 
 def ldap3_kerberos_login(connection, target, user, password, domain='', lmhash='', nthash='', aesKey='', kdcHost=None,
@@ -288,9 +288,9 @@ def init_ldap_connection(target, tls_version, args, domain, username, password, 
         ldap_session.bind()
         ldap3_kerberos_login(ldap_session, target, username, password, domain, lmhash, nthash, args.aesKey, kdcHost=args.dc_ip)
     elif args.hashes is not None:
-        ldap_session = ldap3.Connection(ldap_server, user=user, password=lmhash + ":" + nthash, authentication=ldap3.NTLM, auto_bind=True)
+        ldap_session = ldap3.Connection(ldap_server, user=user, password=lmhash + ":" + nthash, authentication=ldap3.NTLM, auto_bind=True, session_security=ldap3.ENCRYPT)
     else:
-        ldap_session = ldap3.Connection(ldap_server, user=user, password=password, authentication=ldap3.NTLM, auto_bind=True)
+        ldap_session = ldap3.Connection(ldap_server, user=user, password=password, authentication=ldap3.NTLM, auto_bind=True, session_security=ldap3.ENCRYPT)
 
     return ldap_server, ldap_session
 
