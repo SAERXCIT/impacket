@@ -29,6 +29,9 @@ Merged PRs
 * [#1847](https://github.com/SecureAuthCorp/impacket/pull/1847): Added user-status functionality to the SAMHashes Class of the secrestdump.py
 * [#1848](https://github.com/SecureAuthCorp/impacket/pull/1848): Fix netlogon implementation
 * [#1875](https://github.com/SecureAuthCorp/impacket/pull/1875): add SAN with UPN by default when doing shadow credentials
+* [#1893](https://github.com/SecureAuthCorp/impacket/pull/1893): Add support for binary entropy in dpapi.py unprotect
+* [#1894](https://github.com/SecureAuthCorp/impacket/pull/1894): Fix: Add Ability to Read Files with Open Handles over SMB
+* [#1895](https://github.com/SecureAuthCorp/impacket/pull/1895): [ psexecsvc.py ] New remote code execution tool
 
 Impacket
 ========
