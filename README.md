@@ -32,6 +32,7 @@ Merged PRs
 * [#1893](https://github.com/SecureAuthCorp/impacket/pull/1893): Add support for binary entropy in dpapi.py unprotect
 * [#1894](https://github.com/SecureAuthCorp/impacket/pull/1894): Fix: Add Ability to Read Files with Open Handles over SMB
 * [#1895](https://github.com/SecureAuthCorp/impacket/pull/1895): [ psexecsvc.py ] New remote code execution tool
+* [#1898](https://github.com/SecureAuthCorp/impacket/pull/1898): Adding regsecrets and dpapidump
 
 Impacket
 ========
