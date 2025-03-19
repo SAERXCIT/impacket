@@ -667,7 +667,7 @@ class TICKETER:
             logging.info("\tAdding necessary ticket flags")
             originalFlags = [i for i, x in enumerate(list(encTicketPart['flags'].asBinary())) if x == '1']
             flags = originalFlags
-            newFlags = [TicketFlags.forwardable.value, TicketFlags.proxiable.value, TicketFlags.renewable.value, TicketFlags.pre_authent.value]
+            newFlags = [TicketFlags.forwardable.value, TicketFlags.renewable.value, TicketFlags.pre_authent.value, TicketFlags.name_canonicalize.value]
             if self.__domain == self.__server:
                 newFlags.append(TicketFlags.initial.value)
             for newFlag in newFlags:
@@ -690,7 +690,8 @@ class TICKETER:
 
             flags = list()
             flags.append(TicketFlags.forwardable.value)
-            flags.append(TicketFlags.proxiable.value)
+            #flags.append(TicketFlags.proxiable.value)
+            flags.append(TicketFlags.name_canonicalize.value)
             flags.append(TicketFlags.renewable.value)
             if self.__domain == self.__server:
                 flags.append(TicketFlags.initial.value)

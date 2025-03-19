@@ -405,8 +405,13 @@ class TicketFlags(Enum):
     hw_authent               = 11
     transited_policy_checked = 12
     ok_as_delegate           = 13
-    enc_pa_rep               = 15
+    name_canonicalize        = 15
     anonymous                = 16
+    disable_transited_check  = 26
+    renewable_ok             = 27
+    enc_tkt_in_skey          = 28
+    renew                    = 30
+    validate                 = 31
 
 class KDCOptions(Enum):
     reserved                = 0
