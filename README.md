@@ -21,18 +21,15 @@ Merged PRs
 * [#1477](https://github.com/SecureAuthCorp/impacket/pull/1477): Fix HKEY_CURRENT_USER and add HKEY_USERS
 * [#1593](https://github.com/SecureAuthCorp/impacket/pull/1593): Feature/relay sccm adminservice
 * [#1628](https://github.com/SecureAuthCorp/impacket/pull/1628): Patches secretsdump unable to compute Kerberos salt to retrieve AESkeys via Kerberos authentication
-* [#1759](https://github.com/SecureAuthCorp/impacket/pull/1759): [secretsdump] Filter foreign users when parsing NTDS.dit
 * [#1809](https://github.com/SecureAuthCorp/impacket/pull/1809): Add clear_keycredentiallinks to ldap_shell
 * [#1813](https://github.com/SecureAuthCorp/impacket/pull/1813): bugfix in SEALKEY()
-* [#1814](https://github.com/SecureAuthCorp/impacket/pull/1814): Display created ProcessId using wmiexec.py
 * [#1840](https://github.com/SecureAuthCorp/impacket/pull/1840): Add parsing for 'Export' hives and boot key computation from class names
 * [#1847](https://github.com/SecureAuthCorp/impacket/pull/1847): Added user-status functionality to the SAMHashes Class of the secrestdump.py
-* [#1848](https://github.com/SecureAuthCorp/impacket/pull/1848): Fix netlogon implementation
 * [#1875](https://github.com/SecureAuthCorp/impacket/pull/1875): add SAN with UPN by default when doing shadow credentials
 * [#1893](https://github.com/SecureAuthCorp/impacket/pull/1893): Add support for binary entropy in dpapi.py unprotect
 * [#1894](https://github.com/SecureAuthCorp/impacket/pull/1894): Fix: Add Ability to Read Files with Open Handles over SMB
 * [#1895](https://github.com/SecureAuthCorp/impacket/pull/1895): [ psexecsvc.py ] New remote code execution tool
-* [#1898](https://github.com/SecureAuthCorp/impacket/pull/1898): Adding regsecrets and dpapidump
+* [#1919](https://github.com/SecureAuthCorp/impacket/pull/1919): Support channel binding and ldap signing for ntlm and kerberos auth
 
 Impacket
 ========
