@@ -2162,7 +2162,6 @@ class NTDSHashes:
         'pekList':b'ATTk590689',
         'supplementalCredentials':b'ATTk589949',
         'pwdLastSet':b'ATTq589920',
-
         'trustAuthIncoming':b'ATTk589953',
         'trustAuthOutgoing':b'ATTk589959',
         'trustPartner':b'ATTm589957',
