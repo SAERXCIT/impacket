@@ -21,7 +21,7 @@ HASH_ALGO="sha256"
 def getTicksNow():
     # https://learn.microsoft.com/en-us/dotnet/api/system.datetime.ticks?view=net-5.0#system-datetime-ticks
     dt_now = datetime.datetime.now()
-    csharp_epoch = datetime.datetime(year=1, month=1, day=1)
+    csharp_epoch = datetime.datetime(year=1601, month=1, day=1)
     delta = dt_now - csharp_epoch
     return int(delta.total_seconds() * 10000000) # Convert to microseconds and multiply by 10 for ticks
 
