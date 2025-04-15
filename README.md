@@ -26,10 +26,15 @@ Merged PRs
 * [#1840](https://github.com/SecureAuthCorp/impacket/pull/1840): Add parsing for 'Export' hives and boot key computation from class names
 * [#1847](https://github.com/SecureAuthCorp/impacket/pull/1847): Added user-status functionality to the SAMHashes Class of the secrestdump.py
 * [#1875](https://github.com/SecureAuthCorp/impacket/pull/1875): add SAN with UPN by default when doing shadow credentials
+* [#1882](https://github.com/SecureAuthCorp/impacket/pull/1875): Improve file timestamp resolution
 * [#1893](https://github.com/SecureAuthCorp/impacket/pull/1893): Add support for binary entropy in dpapi.py unprotect
 * [#1894](https://github.com/SecureAuthCorp/impacket/pull/1894): Fix: Add Ability to Read Files with Open Handles over SMB
 * [#1895](https://github.com/SecureAuthCorp/impacket/pull/1895): [ psexecsvc.py ] New remote code execution tool
 * [#1919](https://github.com/SecureAuthCorp/impacket/pull/1919): Support channel binding and ldap signing for ntlm and kerberos auth
+* [#1927](https://github.com/SecureAuthCorp/impacket/pull/1927): Gain FullControl on arbitrary objects trough ldapshell
+* [#1940](https://github.com/SecureAuthCorp/impacket/pull/1940): Adding "-dc-host" parameter missing in some examples
+* [#1946](https://github.com/SecureAuthCorp/impacket/pull/1946): Fix LDAP queries with non-ascii chars
+* [#1947](https://github.com/SecureAuthCorp/impacket/pull/1947): Add new relay capabilities to the WinRM HTTPS endpoint
 
 Impacket
 ========
