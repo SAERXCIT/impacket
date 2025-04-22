@@ -323,7 +323,6 @@ class WinRMRelayServer(Thread):
 
         def do_local_auth(self, messageType, token, proxy):
             if messageType == 1:
-                LOG.info("MESSAGE 1")
                 negotiateMessage = ntlm.NTLMAuthNegotiate()
                 negotiateMessage.fromString(token)
                 ansFlags = 0
@@ -359,7 +358,6 @@ class WinRMRelayServer(Thread):
                 return
 
             elif messageType == 3:
-                LOG.info("MESSAGE 3")
                 authenticateMessage = ntlm.NTLMAuthChallengeResponse()
                 authenticateMessage.fromString(token)
                 LOG.info(authenticateMessage)
@@ -385,7 +383,6 @@ class WinRMRelayServer(Thread):
 
         def do_relay(self, messageType, token, proxy, content = None):
             if messageType == 1:
-                LOG.info("MESSAGE 1")
                 if self.server.config.disableMulti:
                     self.target = self.server.config.target.getTarget(multiRelay=False)
                     if self.target is None:
@@ -422,7 +419,6 @@ class WinRMRelayServer(Thread):
                         self.do_REDIRECT()
 
             elif messageType == 3:
-                LOG.info("MESSAGE 3")
                 authenticateMessage = ntlm.NTLMAuthChallengeResponse()
                 authenticateMessage.fromString(token)
 
@@ -477,7 +473,7 @@ class WinRMRelayServer(Thread):
 
                     if self.server.config.dumpHashes is True:
                         LOG.info(ntlm_hash_data['hash_string'])
-                        
+
                     self.do_attack()
                     
                     if self.server.config.disableMulti:
