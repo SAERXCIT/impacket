@@ -151,7 +151,7 @@ class WinRMShell(cmd.Cmd):
 
         response = self.client.getresponse()
         body = response.read().decode()
-        
+
         command_id = re.search(r"<rsp:CommandId>(.*?)</rsp:CommandId>", body).group(1)
         receive_xml = f'''
         <?xml version="1.0" encoding="utf-8"?>

