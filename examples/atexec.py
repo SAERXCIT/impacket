@@ -114,8 +114,8 @@ class TSCH_EXEC:
         dce.connect()
         dce.set_auth_level(RPC_C_AUTHN_LEVEL_PKT_PRIVACY)
         dce.bind(tsch.MSRPC_UUID_TSCHS)
-        tmpName = ''.join([random.choice(string.ascii_letters) for _ in range(4)])
-        tmpFileName = tmpName + '.tmp'
+        tmpName = ''.join([random.choice(string.ascii_letters) for _ in range(7)])
+        tmpFileName = tmpName + '.txt'
 
         if self.sessionId is not None:
             cmd, args = cmd_split(self.__command)
@@ -133,7 +133,7 @@ class TSCH_EXEC:
   </Actions>
   <Triggers>
     <CalendarTrigger>
-      <StartBoundary>2023-02-11T09:23:43.9274721</StartBoundary>
+      <StartBoundary>2025-04-11T10:24:44.1654672</StartBoundary>
       <Enabled>true</Enabled>
       <ScheduleByDay>
         <DaysInterval>1</DaysInterval>
