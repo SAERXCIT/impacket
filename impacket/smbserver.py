@@ -197,6 +197,17 @@ def encodeSMBString(flags, text):
     else:
         return text.encode('ascii')
 
+def getFileTime(t):
+    t *= 10000000
+    t += 116444736000000000
+    return t
+
+
+def getUnixTime(t):
+    t -= 116444736000000000
+    t //= 10000000
+    return t
+
 def getSMBDate(t) -> bytes:
     # TODO: Fix this :P
     d = datetime.date.fromtimestamp(t)
