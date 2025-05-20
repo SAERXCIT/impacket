@@ -1000,6 +1000,8 @@ class SMBCommand(Structure):
 class AsciiOrUnicodeStructure(Structure):
     UnicodeStructure = ()
     AsciiStructure   = ()
+    ENCODING = 'utf-8'
+
     def __init__(self, flags = 0, **kargs):
         if flags & SMB.FLAGS2_UNICODE:
             self.structure = self.UnicodeStructure
