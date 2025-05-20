@@ -465,7 +465,7 @@ class DPAPI:
                     fp2 = open(self.options.entropy_file, 'rb')
                     entropy = fp2.read()
                     fp2.close()
-               elif self.options.entropy is not None:
+                elif self.options.entropy is not None:
                     if self.options.entropy.startswith("0x"):
                         self.options.entropy = self.options.entropy[2:]
                     entropy = unhexlify(self.options.entropy)
