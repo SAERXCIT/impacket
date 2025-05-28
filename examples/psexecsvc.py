@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # Made with luv by Reino @_cablethief and @Defte_ :D
 
 import os
@@ -73,7 +74,7 @@ class PSEXECSVC:
             self.lmhash, self.nthash = options.hashes.split(":")
         
     def run(self):
-        stringbinding = f"ncacn_np:{remoteName}[\pipe\svcctl]" 
+        stringbinding = f"ncacn_np:{remoteName}[\\\\pipe\\svcctl]"
         logging.debug(f"StringBinding: {stringbinding}")
         rpctransport = transport.DCERPCTransportFactory(stringbinding)
         rpctransport.set_dport(self.port)
