@@ -117,7 +117,6 @@ class ADCSAttack:
 
     @staticmethod
     def generate_certattributes(template, altName):
-
         if altName:
             return "CertificateTemplate:{}\r\nSAN:upn={}".format(template, altName)
         return "CertificateTemplate:{}".format(template)

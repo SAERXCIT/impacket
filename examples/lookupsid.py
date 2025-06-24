@@ -42,7 +42,7 @@ class LSALookupSid:
         }
 
     def __init__(self, username='', password='', domain='', port = None,
-                 hashes = None, domain_sids = False, use_kerberos = False, maxRid=4000):
+                 hashes = None, domain_sids = False, use_kerberos = False, maxRid=4000, start=1000):
 
         self.__username = username
         self.__password = password
@@ -53,6 +53,7 @@ class LSALookupSid:
         self.__nthash = ''
         self.__domain_sids = domain_sids
         self.__doKerberos = use_kerberos
+        self.__start = start
         if hashes is not None:
             self.__lmhash, self.__nthash = hashes.split(':')
 
@@ -74,7 +75,7 @@ class LSALookupSid:
             rpctransport.set_credentials(self.__username, self.__password, self.__domain, self.__lmhash, self.__nthash)
 
         try:
-            self.__bruteForce(rpctransport, self.__maxRid)
+            self.__bruteForce(rpctransport, self.__maxRid, self.__start)
         except Exception as e:
             if logging.getLogger().level == logging.DEBUG:
                 import traceback
@@ -82,7 +83,7 @@ class LSALookupSid:
             logging.critical(str(e))
             raise
 
-    def __bruteForce(self, rpctransport, maxRid):
+    def __bruteForce(self, rpctransport, maxRid, start):
         dce = rpctransport.get_dce_rpc()
         entries = []
         dce.connect()
@@ -108,7 +109,7 @@ class LSALookupSid:
 
         logging.info('Domain SID is: %s' % domainSid)
 
-        soFar = 0
+        soFar = start - 1000
         SIMULTANEOUS = 1000
         for j in range(maxRid//SIMULTANEOUS+1):
             if (maxRid - soFar) // SIMULTANEOUS == 0:
@@ -157,6 +158,7 @@ if __name__ == '__main__':
 
     parser.add_argument('target', action='store', help='[[domain/]username[:password]@]<targetName or address>')
     parser.add_argument('maxRid', action='store', default = '4000', nargs='?', help='max Rid to check (default 4000)')
+    parser.add_argument('-start', action='store_true', default = 1000, type=int, help='Start bruteforce at a different RID (default is 1000)')
     parser.add_argument('-debug', action='store_true', help='Turn DEBUG output ON')
     parser.add_argument('-ts', action='store_true', help='Adds timestamp to every logging output')
 
@@ -199,7 +201,7 @@ if __name__ == '__main__':
     if options.target_ip is None:
         options.target_ip = remoteName
 
-    lookup = LSALookupSid(username, password, domain, int(options.port), options.hashes, options.domain_sids, options.k, options.maxRid)
+    lookup = LSALookupSid(username, password, domain, int(options.port), options.hashes, options.domain_sids, options.k, options.maxRid, options.start)
     try:
         lookup.dump(remoteName, options.target_ip)
     except:
