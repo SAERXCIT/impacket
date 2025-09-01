@@ -35,7 +35,7 @@ from impacket.examples.utils import parse_identity
 from impacket.dcerpc.v5 import samr, epm, transport
 from impacket.spnego import SPNEGO_NegTokenInit, TypesMech
 
-from impacket.examples.utils import ldap3_kerberos_login
+from impacket.examples.utils import init_ldap_session, ldap3_kerberos_login
 
 import ldap3
 import argparse
@@ -149,45 +149,8 @@ class ADDCOMPUTER:
         self.doSAMRAdd(rpctransport)
 
     def run_ldaps(self):
-        connectTo = self.__target
-        if self.__targetIp is not None:
-            connectTo = self.__targetIp
         try:
-            user = '%s\\%s' % (self.__domain, self.__username)
-            if self.__method == 'LDAPS':
-                tls = ldap3.Tls(validate=ssl.CERT_NONE, version=ssl.PROTOCOL_TLSv1_2, ciphers='ALL:@SECLEVEL=0')
-                use_ssl = True
-            else:
-                tls = None
-                use_ssl = False
-            try:
-                ldapServer = ldap3.Server(connectTo, use_ssl=use_ssl, port=self.__port, get_info=ldap3.ALL, tls=tls)
-                if self.__doKerberos:
-                    ldapConn = ldap3.Connection(ldapServer)
-                    ldap3_kerberos_login(ldapConn, connectTo, self.__username, self.__password, self.__domain, self.__lmhash, self.__nthash,
-                                                 self.__aesKey, kdcHost=self.__kdcHost)
-                elif self.__hashes is not None:
-                    ldapConn = ldap3.Connection(ldapServer, user=user, password=self.__hashes, authentication=ldap3.NTLM)
-                    ldapConn.bind()
-                else:
-                    ldapConn = ldap3.Connection(ldapServer, user=user, password=self.__password, authentication=ldap3.NTLM)
-                    ldapConn.bind()
-
-            except ldap3.core.exceptions.LDAPSocketOpenError:
-                #try tlsv1
-                tls = ldap3.Tls(validate=ssl.CERT_NONE, version=ssl.PROTOCOL_TLSv1, ciphers='ALL:@SECLEVEL=0')
-                ldapServer = ldap3.Server(connectTo, use_ssl=True, port=self.__port, get_info=ldap3.ALL, tls=tls)
-                if self.__doKerberos:
-                    ldapConn = ldap3.Connection(ldapServer)
-                    ldap3_kerberos_login(ldapConn, connectTo, self.__username, self.__password, self.__domain, self.__lmhash, self.__nthash,
-                                                 self.__aesKey, kdcHost=self.__kdcHost)
-                elif self.__hashes is not None:
-                    ldapConn = ldap3.Connection(ldapServer, user=user, password=self.__hashes, authentication=ldap3.NTLM)
-                    ldapConn.bind()
-                else:
-                    ldapConn = ldap3.Connection(ldapServer, user=user, password=self.__password, authentication=ldap3.NTLM)
-                    ldapConn.bind()
-
+            ldapServer, ldapConn = init_ldap_session(self.__domain, self.__username, self.__password, self.__lmhash, self.__nthash, self.__doKerberos, self.__targetIp, self.__target, self.__aesKey, True)
             if self.__method == 'LDAP':
                 logging.info("Starting TLS")
                 ldapConn.start_tls()

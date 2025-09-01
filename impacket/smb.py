@@ -52,6 +52,7 @@
 from __future__ import division
 from __future__ import print_function
 from __future__ import annotations
+
 import os
 import socket
 from binascii import a2b_hex
@@ -627,14 +628,32 @@ class UnsupportedFeature(Exception):
     pass
 
 # Add basic filetime conversion helper methods.
-def POSIXtoFT(t: int) -> int:
+def POSIXtoFT(t):
+    """
+    Helper method that converts POSIX timestamps to FILETIME timestamps.
+    
+    :param int t: POSIX timestamp - can be retrieved from datetime library.
+    
+    :return int: FILETIME timestamp representing the given POSIX timestamp.
+    """
+    
     t *= 10000000
     t += 116444736000000000
+    
     return int(t)
 
-def FTtoPOSIX(t: int) -> int:
+def FTtoPOSIX(t):
+    """
+    Helper method that converts FILETIME timestamps to POSIX timestamps.
+    
+    :param int t: FILETIME timestamp.
+    
+    :return int: POSIX timestamp representing the given FILETIME timestamp.
+    """
+    
     t -= 116444736000000000
     t //= 10000000
+    
     return int(t)
 
 # Define SMB Standard DateTime Data according to (2.2.1.4 Time)
@@ -646,17 +665,28 @@ class SMBDateStruct(BigEndianStructure):
     ]
 
 class SMB_DATE:
-    def __init__(self, year: int, month: int, day: int) -> None:
+    """
+    2.2.1.4.1 SMB_DATE
+    Class representing an SMB Date value.
+    https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-cifs/31b65222-4171-49b4-aeed-7d3f38ecf68b
+    """
+    def __init__(self, year, month, day):
+        """
+        :param int year: An integer representing the valid year part of the date.
+        :param int month: An integer representing the valid month part of the date.
+        :param int day: An integer representing the valid day part of the date.
+        """
+        
         self.year = year
         self.month = month
         self.day = day
     
     @property
-    def year(self) -> int:
+    def year(self):
         return self._year + 1980
     
     @year.setter
-    def year(self, value: int) -> None:
+    def year(self, value):
         value = value - 1980
         if value < 0 or value > 119:
             raise ValueError("Invalid year component.")
@@ -664,52 +694,65 @@ class SMB_DATE:
         self._year = value
     
     @property
-    def month(self) -> int:
+    def month(self):
         return self._month
     
     @month.setter
-    def month(self, value: int) -> None:
+    def month(self, value):
         if value < 0 or value > 12:
             raise ValueError("Invalid month component.")
         
         self._month = value
     
     @property
-    def day(self) -> int:
+    def day(self):
         return self._day
     
     @day.setter
-    def day(self, value: int) -> None:
+    def day(self, value):
         if value < 0 or value > 31:
             raise ValueError("Invalid day component.")
         
         self._day = value
     
-    def pack(self) -> bytes:
+    def pack(self):
         return ((self._year << 9) & 0xFE00) + ((self._month << 5) & 0x01E0) + (self._day & 0x001F)
     
-    def pack_into(self) -> SMBDateStruct:
+    def pack_into(self):
         """
         Helper method to easily access the data as a struct.
+        
+        :return SMBDateStruct: The structure representation of the object.
         """
+        
         res = SMBDateStruct()
         pack_into(">H", res, 0, self.pack())
         return res
     
     @classmethod
-    def from_int(cls, data: int) -> SMB_DATE:
+    def from_int(cls, data):
         """
-        Helper method to easily convert integer value to class object.
+        Helper method to easily convert packed bytes value to class object.
+        
+        :param bytes data: Packed bytes to be converted to a class object.
+        
+        :return SMB_DATE: The class representation of the packed data bytes.
         """
+        
         s = SMBDateStruct()
         pack_into(">H", s, 0, data)
         return cls.from_struct(s)
         
     @classmethod
-    def from_struct(cls, s: SMBDateStruct) -> SMB_DATE:
+    def from_struct(cls, s):
         """
         Helper method to easily convert struct to class object.
+        
+        :param SMBDateStruct s: The struct object to be converted to a class object.
+        
+        :return SMB_DATE: The class representation of the struct object.
         """
+        
         return cls(s.y + 1980, s.m, s.d)
 
 class SMBTimeStruct(BigEndianStructure):
@@ -720,69 +763,93 @@ class SMBTimeStruct(BigEndianStructure):
     ]
 
 class SMB_TIME:
-    def __init__(self, hour: int, minutes: int, seconds: int) -> None:
+    """
+    2.2.1.4.2 SMB_TIME
+    Class representing an SMB Time value.
+    https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-cifs/401749d1-ee41-4273-9dcb-698180e68745
+    """
+    def __init__(self, hour, minutes, seconds):
+        """
+        :param int hour: An integer representing the valid hour part of the time.
+        :param int minutes: An integer representing the valid minutes part of the time.
+        :param int seconds: An integer representing the valid seconds part of the time.
+        """
+        
         self.hour = hour
         self.minutes = minutes
         self.seconds = seconds
     
     @property
-    def hour(self) -> int:
+    def hour(self):
         return self._hour
     
     @hour.setter
-    def hour(self, value: int) -> None:
+    def hour(self, value):
         if value < 0 or value > 23:
             raise ValueError("Invalid hour component.")
         
         self._hour = value
     
     @property
-    def minutes(self) -> int:
+    def minutes(self):
         return self._minutes
     
     @minutes.setter
-    def minutes(self, value: int) -> None:
+    def minutes(self, value):
         if value < 0 or value > 59:
             raise ValueError("Invalid minutes component.")
         
         self._minutes = value
     
     @property
-    def seconds(self) -> int:
+    def seconds(self):
         return self._seconds
     
     @seconds.setter
-    def seconds(self, value: int) -> None:
+    def seconds(self, value):
         if value < 0 or value > 59:
             raise ValueError("Invalid seconds component.")
         
         self._seconds = value
 
-    def pack(self) -> bytes:
+    def pack(self):
         return ((self._hour << 11) & 0xF800) + ((self._minutes << 5) & 0x07E0) + (self._seconds & 0x001F)
     
-    def pack_into(self) -> SMBTimeStruct:
+    def pack_into(self):
         """
         Helper method to easily access the data as a struct.
+        
+        :return SMBTimeStruct: The structure representation of the object.
         """
+        
         res = SMBTimeStruct()
         pack_into(">H", res, 0, self.pack())
         return res
 
     @classmethod
-    def from_int(cls, data: int) -> SMB_TIME:
+    def from_int(cls, data):
         """
-        Helper method to easily convert integer value to class object.
+        Helper method to easily convert packed bytes value to class object.
+        
+        :param bytes data: Packed bytes to be converted to a class object.
+        
+        :return SMB_TIME: The class representation of the packed data bytes.
         """
+        
         s = SMBTimeStruct()
         pack_into(">H", s, 0, data)
         return cls.from_struct(s)
         
     @classmethod
-    def from_struct(cls, s: SMBTimeStruct) -> SMB_TIME:
+    def from_struct(cls, s):
         """
         Helper method to easily convert struct to class object.
+        
+        :param SMBTimeStruct s: The struct object to be converted to a class object.
+        
+        :return SMB_TIME: The class representation of the struct object.
         """
+        
         return cls(s.h, s.m, s.s)
 
 # Contains information about a SMB shared device/service
@@ -3272,7 +3339,7 @@ class SMB(object):
             # Remove Potential Prefix Padding
             return trans2Response['Data'][-trans2Parameters['TotalDataCount']:]
     
-    def set_file_info(self, tid: int, fid: int, fileInfoClass: int, file_info_data: Structure, password = None):
+    def set_file_info(self, tid, fid, fileInfoClass, file_info_data):
         SMBTrans2SetFileInfo_Params = SMBSetFileInformation_Parameters()
         SMBTrans2SetFileInfo_Params["FID"] = fid
         SMBTrans2SetFileInfo_Params["InformationLevel"] = fileInfoClass
@@ -3831,6 +3898,15 @@ class SMB(object):
 
         setup = '\x53\x00\x00\x00'
         name = '\\PIPE%s\x00' % pipe
+        if self.__flags2 & SMB.FLAGS2_UNICODE:
+            start_of_name = 32+3+28+len(setup)#32 is smb_header,28 is parameter,3 is wordcount and bytecount
+            start_pad = 2-(start_of_name%2)
+            name = start_pad*b'\x00' + name.encode('utf-16le')
+            end_of_name = start_of_name+len(name) 
+            pad_len = 4-(end_of_name%4)
+            name += pad_len*b'\x00'
+        else:
+            name = name.encode('utf-8')
         transCommand['Parameters']['Setup'] = setup
         transCommand['Parameters']['TotalParameterCount'] = 0
         transCommand['Parameters']['TotalDataCount'] = 0

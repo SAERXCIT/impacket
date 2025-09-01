@@ -197,24 +197,13 @@ def encodeSMBString(flags, text):
     else:
         return text.encode('ascii')
 
-def getFileTime(t):
-    t *= 10000000
-    t += 116444736000000000
-    return t
 
-
-def getUnixTime(t):
-    t -= 116444736000000000
-    t //= 10000000
-    return t
-
-def getSMBDate(t) -> bytes:
-    # TODO: Fix this :P
+def getSMBDate(t):
     d = datetime.date.fromtimestamp(t)
     return smb.SMB_DATE(d.year, d.month, d.day).pack()
 
 
-def getSMBTime(t) -> bytes:
+def getSMBTime(t):
     d = datetime.datetime.fromtimestamp(t)
     return smb.SMB_TIME(d.hour, d.minute, d.second).pack()
 
@@ -2939,7 +2928,6 @@ class SMB2Commands:
                 ansFlags |= ntlm.NTLMSSP_NEGOTIATE_SIGN
 
             ansFlags |= ntlm.NTLMSSP_NEGOTIATE_VERSION | ntlm.NTLMSSP_NEGOTIATE_TARGET_INFO | ntlm.NTLMSSP_TARGET_TYPE_SERVER | ntlm.NTLMSSP_NEGOTIATE_NTLM | ntlm.NTLMSSP_REQUEST_TARGET
-            
             if smbServer._SMBSERVER__dropSSP:
                 ansFlags = (ntlm.NTLMSSP_DROP_SSP_STATIC | 0)
             # Generate the AV_PAIRS
@@ -4046,6 +4034,8 @@ class SMBSERVER(socketserver.ThreadingMixIn, socketserver.TCPServer):
         
         self.__dropSSP = False
 
+        self.__dropSSP = False
+
         # Allow anonymous logon
         self.__anonymousLogon = True
 
@@ -5022,7 +5012,7 @@ class SimpleSMBServer:
 
     def setAuthCallback(self, callback):
         self.__server.setAuthCallback(callback)
-        
+
     def setDropSSP(self, value):
         if value is True:
             self.__smbConfig.set("global", "DropSSP", "True")
