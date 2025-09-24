@@ -54,7 +54,6 @@ class WinRMShell(cmd.Cmd):
             xmlns:w="http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd"
             xmlns:p="http://schemas.microsoft.com/wbem/wsman/1/wsman.xsd"
             xmlns:rsp="http://schemas.microsoft.com/wbem/wsman/1/windows/shell">
-
             <env:Header>
                 <a:To>http://windows-host:5985/wsman</a:To>
                 <a:ReplyTo>
@@ -78,7 +77,6 @@ class WinRMShell(cmd.Cmd):
                 <w:Locale xml:lang="en-US"/>
                 <p:DataLocale xml:lang="en-US"/>
             </env:Header>
-
             <env:Body>
                 <rsp:Shell>
                     <rsp:InputStreams>stdin</rsp:InputStreams>
@@ -95,7 +93,7 @@ class WinRMShell(cmd.Cmd):
 
         self.client.request("POST", "/wsman", headers=headers, body=initiate_shell)
         res = self.client.getresponse()
-        
+
         # Retrieve ShellID
         if match := re.search(r'<w:Selector\s+Name="ShellId">(.*?)</w:Selector>', res.read().decode()):
             self.shell_id = match.group(1)
@@ -106,7 +104,7 @@ class WinRMShell(cmd.Cmd):
     def onecmd(self, command):
         if not command.strip():
             return     
-        
+
         if command.strip() == "exit":
             self.do_exit()
 
@@ -118,7 +116,6 @@ class WinRMShell(cmd.Cmd):
             xmlns:a="http://schemas.xmlsoap.org/ws/2004/08/addressing"
             xmlns:w="http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd"
             xmlns:rsp="http://schemas.microsoft.com/wbem/wsman/1/windows/shell">
-
             <env:Header>
                 <a:To>http://windows-host:5985/wsman</a:To>
                 <a:ReplyTo>
@@ -135,7 +132,6 @@ class WinRMShell(cmd.Cmd):
                     <w:Selector Name="ShellId">{self.shell_id}</w:Selector>
                 </w:SelectorSet>
             </env:Header>
-
             <env:Body>
                 <rsp:CommandLine>
                     <rsp:Command>{command}</rsp:Command>
@@ -160,7 +156,6 @@ class WinRMShell(cmd.Cmd):
             xmlns:a="http://schemas.xmlsoap.org/ws/2004/08/addressing"
             xmlns:w="http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd"
             xmlns:rsp="http://schemas.microsoft.com/wbem/wsman/1/windows/shell">
-
             <env:Header>
                 <a:To>http://windows-host:5985/wsman</a:To>
                 <a:ReplyTo>
@@ -177,7 +172,6 @@ class WinRMShell(cmd.Cmd):
                     <w:Selector Name="ShellId">{self.shell_id}</w:Selector>
                 </w:SelectorSet>
             </env:Header>
-
             <env:Body>
                 <rsp:Receive>
                     <rsp:DesiredStream CommandId="{command_id}">stdout stderr</rsp:DesiredStream>
@@ -241,10 +235,10 @@ class WinRMShell(cmd.Cmd):
         self.client.request("POST", "/wsman", headers=headers, body=destroy_shell)
         res = self.client.getresponse()   
         res.read()
-    
+
         if self.shell is not None:
             self.shell.close()
-    
+
         LOG.info("WinRM shell destroyed successfully. You can now leave the NC shell :)")
         return True
 

