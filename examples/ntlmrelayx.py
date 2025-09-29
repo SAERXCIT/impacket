@@ -338,7 +338,6 @@ if __name__ == '__main__':
     serversoptions.add_argument('--no-http-server', action='store_true', help='Disables the HTTP server')
     serversoptions.add_argument('--no-wcf-server', action='store_true', help='Disables the WCF server')
     serversoptions.add_argument('--no-raw-server', action='store_true', help='Disables the RAW server')
-    serversoptions.add_argument('--no-winrm-server', action='store_true', help='Disables the WinRM server')
     serversoptions.add_argument('--no-rpc-server', action='store_true', help='Disables the RPC server')
     serversoptions.add_argument('--no-winrm-server', action='store_true', help='Disables the WinRM server')
     
