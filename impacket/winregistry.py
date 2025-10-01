@@ -163,7 +163,6 @@ StructMappings = {b'nk': REG_NK,
                   b'sk': REG_SK,
                  }
 
-<<<<<<< HEAD
 class Registry(ABC):
     def close(self):
         if hasattr(self, 'fd'):
