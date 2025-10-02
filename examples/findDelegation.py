@@ -234,12 +234,10 @@ if __name__ == '__main__':
     parser.add_argument('-target-domain', action='store', help='Domain to query/request if different than the domain of the user. '
                                                                'Allows for retrieving delegation info across trusts.')
     parser.add_argument('-ts', action='store_true', help='Adds timestamp to every logging output')
-    parser.add_argument('-user', action='store', help='Requests data for specific user')
     parser.add_argument('-debug', action='store_true', help='Turn DEBUG output ON')
 
     parser.add_argument('-user', action='store', help='Requests data for specific user')
     parser.add_argument('-disabled', action='store_true', help='Query disabled users too')
-
     group = parser.add_argument_group('authentication')
     group.add_argument('-hashes', action="store", metavar = "LMHASH:NTHASH", help='NTLM hashes, format is LMHASH:NTHASH')
     group.add_argument('-no-pass', action="store_true", help='don\'t ask for password (useful for -k)')
