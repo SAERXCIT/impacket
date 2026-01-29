@@ -38,6 +38,7 @@ Merged PRs
 * [#1947](https://github.com/SecureAuthCorp/impacket/pull/1947): Add new relay capabilities to the WinRM HTTPS endpoint
 * [#1953](https://github.com/SecureAuthCorp/impacket/pull/1953): Add of the getNCChanges example
 * [#2020](https://github.com/SecureAuthCorp/impacket/pull/2020): Add AES256 secret policy blob decryption support (SCCM)
+<img width="2043" height="571" alt="Impacket_light" src="https://github.com/user-attachments/assets/14aed700-0c6e-4865-ac53-686b91874f50" />
 
 Impacket
 ========
