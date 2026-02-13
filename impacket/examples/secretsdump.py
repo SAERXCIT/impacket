@@ -1839,7 +1839,7 @@ class SAMHashes(OfflineRegistry):
                 except Exception as exc:
                     LOG.error('SAM history parsing failed for RID %d: %s', rid, exc, exc_info=True)
     
-    def edit(self, user, newNTHash, newLMHash=b''):
+    def edit(self, user, newNTHash, newLMHash=b'', bChangeEnable=False, bEnable=True):
         NTPASSWORD = b"NTPASSWORD\0"
         LMPASSWORD = b"LMPASSWORD\0"
 
@@ -1875,6 +1875,16 @@ class SAMHashes(OfflineRegistry):
                 LOG.debug('Located rid for "%s": %d' % (user, rid))
             else:
                 continue
+
+            if bChangeEnable:
+                userAccountF = USER_ACCOUNT_F(self.getValue(ntpath.join(usersKey, rid, 'F'))[1])
+                if bEnable:
+                    userAccountF['GroupedData'] &= ~1 # Set 1st bit to 0
+                else:
+                    userAccountF['GroupedData'] |= 1  # Set 1st bit to 1
+                if self.setValue(ntpath.join(usersKey,rid,'F'), userAccountF.getData()) is None:
+                    LOG.error('Failed to write new user state to SAM hive.')
+                    return
 
             # User has no hash data
             if userAccount['NTHashLength'] == 0:

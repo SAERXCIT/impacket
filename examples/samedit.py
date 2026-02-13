@@ -54,6 +54,9 @@ if __name__ == '__main__':
     parser.add_argument('-password', action='store', help='New password to be set')
     parser.add_argument('-hashes', action='store', help='Replace NTLM hash directly (LM hash is optional)')
 
+    parser.add_argument('-enable', action='store_true', help='Enable the account')
+    parser.add_argument('-disable', action='store_true', help='Disable the account')
+
     parser.add_argument('-system', action='store', help='SYSTEM hive file containing the bootkey for password encryption')
     parser.add_argument('-bootkey', action='store', help='Bootkey used to encrypt and decrypt SAM passwords')
 
@@ -90,6 +93,14 @@ if __name__ == '__main__':
     if options.password is not None and options.hashes is not None:
         logging.critical('Only a password or hash argument can be supplied')
         sys.exit(1)
+
+    if options.enable and options.disable:
+        logging.critical('Cannot enable AND disable an account')
+        sys.exit(1)
+
+    if options.enable or options.disable:
+        bChangeEnable = True
+        bEnable = options.enable
     
     if options.bootkey:
         bootkey = binascii.unhexlify(options.bootkey)
@@ -111,7 +122,7 @@ if __name__ == '__main__':
         NTHash = ntlm.NTOWFv1(options.password)
 
     try:
-        hive.edit(options.user, NTHash, LMHash)
+        hive.edit(options.user, NTHash, LMHash, bChangeEnable=bChangeEnable, bEnable=bEnable)
     except Exception as e:
         if logging.getLogger().level == logging.DEBUG:
             import traceback
