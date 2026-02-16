@@ -1839,7 +1839,7 @@ class SAMHashes(OfflineRegistry):
                 except Exception as exc:
                     LOG.error('SAM history parsing failed for RID %d: %s', rid, exc, exc_info=True)
     
-    def edit(self, user, newNTHash, newLMHash=b'', bChangeEnable=False, bEnable=True):
+    def edit(self, user, newNTHash, newLMHash=b'', bChangePassword=False, bChangeEnable=False, bEnable=True):
         NTPASSWORD = b"NTPASSWORD\0"
         LMPASSWORD = b"LMPASSWORD\0"
 
@@ -1877,14 +1877,18 @@ class SAMHashes(OfflineRegistry):
                 continue
 
             if bChangeEnable:
-                userAccountF = USER_ACCOUNT_F(self.getValue(ntpath.join(usersKey, rid, 'F'))[1])
+                userAccountF = USER_ACCOUNT_F(self.getValue(ntpath.join(usersKey, _rid, 'F'))[1])
                 if bEnable:
                     userAccountF['GroupedData'] &= ~1 # Set 1st bit to 0
                 else:
                     userAccountF['GroupedData'] |= 1  # Set 1st bit to 1
-                if self.setValue(ntpath.join(usersKey,rid,'F'), userAccountF.getData()) is None:
+                if self.setValue(ntpath.join(usersKey,_rid,'F'), userAccountF.getData()) is None:
                     LOG.error('Failed to write new user state to SAM hive.')
                     return
+                LOG.info("Successfully set %s's status to %s" % (userName, "enabled" if bEnable else "disabled"))
+
+            if not bChangePassword:
+                return
 
             # User has no hash data
             if userAccount['NTHashLength'] == 0:

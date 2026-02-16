@@ -70,6 +70,11 @@ if __name__ == '__main__':
     
     options = parser.parse_args()
 
+    bChangeEnable = False
+    bChangePassword = False
+    NTHash = None,
+    LMHash = None
+
     logger.init(options.ts)
 
     if options.debug is True:
@@ -86,8 +91,8 @@ if __name__ == '__main__':
         logging.critical('Only a SYSTEM hive or bootkey value can be supplied')
         sys.exit(1)
     
-    if options.password is None and options.hashes is None:
-        logging.critical('A password or hash argument is required')
+    if options.password is None and options.hashes is None and not options.enable and not options.disable:
+        logging.critical('A password, hash, or the enable/disable action is required')
         sys.exit(1)
     
     if options.password is not None and options.hashes is not None:
@@ -97,6 +102,9 @@ if __name__ == '__main__':
     if options.enable and options.disable:
         logging.critical('Cannot enable AND disable an account')
         sys.exit(1)
+
+    if options.password is not None or options.hashes is not None:
+        bChangePassword = True
 
     if options.enable or options.disable:
         bChangeEnable = True
@@ -122,7 +130,7 @@ if __name__ == '__main__':
         NTHash = ntlm.NTOWFv1(options.password)
 
     try:
-        hive.edit(options.user, NTHash, LMHash, bChangeEnable=bChangeEnable, bEnable=bEnable)
+        hive.edit(options.user, NTHash, LMHash, bChangePassword=bChangePassword, bChangeEnable=bChangeEnable, bEnable=bEnable)
     except Exception as e:
         if logging.getLogger().level == logging.DEBUG:
             import traceback
