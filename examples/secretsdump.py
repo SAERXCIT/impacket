@@ -318,7 +318,7 @@ class DumpSecrets:
                                 SAMFileName = self.__samHiveExport
                                 samFormat = "export"
 
-                            self.__SAMHashes = SAMHashes(SAMFileName, bootKey, isRemote=self.__isRemote,history=self.__history, printUserStatus=self.__printUserStatus, format=samFormat)
+                            self.__SAMHashes = SAMHashes(SAMFileName, bootKey, isRemote=self.__isRemote,history=self.__history, printUserStatus=self.__printUserStatus, pwdLastSet=self.__pwdLastSet, format=samFormat)
                             self.__SAMHashes.dump()
                             if self.__outputFileName is not None:
                                 self.__SAMHashes.export(self.__outputFileName)

